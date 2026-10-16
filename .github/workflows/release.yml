@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish single-file exe
+        run: >
+          dotnet publish PSL/PSL.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -v minimal -o publish
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlainSpaceflightLauncher-win-x64
+          path: publish/PlainSpaceflightLauncher.exe
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body: |
+            PlainSpaceflightLauncher（PSL）—— Spaceflight Simulator 第三方启动器。
+
+            下载下面的 `PlainSpaceflightLauncher.exe` 即可运行：**自包含单文件**，无需安装 .NET
+            （友站页的内置浏览器需要系统已安装 WebView2 运行时，Win10/11 一般自带）。
+
+            协议：GPL-3.0-only。鸣谢：龙腾猫跃（PCL2）、SFS 中文站。
+          files: publish/PlainSpaceflightLauncher.exe
+          draft: false
+          prerelease: false
