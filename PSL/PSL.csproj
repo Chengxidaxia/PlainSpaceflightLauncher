@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>PSL</RootNamespace>
+    <AssemblyName>PlainSpaceflightLauncher</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- 注意：本项目按需求刻意不设置 ApplicationIcon，最终 exe 使用系统默认图标 -->
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Product>PlainSpaceflightLauncher</Product>
+    <AssemblyTitle>PlainSpaceflightLauncher</AssemblyTitle>
+    <Description>Spaceflight Simulator 的第三方启动器</Description>
+    <Company>Chengxidaxia</Company>
+    <Copyright>Copyright (C) 2026 Chengxidaxia. Licensed under GPL-3.0-only.</Copyright>
+    <SatelliteResourceLanguages>zh-Hans</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- WindowsDesktop SDK 的隐式 using 不含 System.IO，这里补上 -->
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2957.106" />
+  </ItemGroup>
+
+</Project>

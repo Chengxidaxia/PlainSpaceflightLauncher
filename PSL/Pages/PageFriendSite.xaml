@@ -1,0 +1,94 @@
+<ctl:PclPage x:Class="PSL.Pages.PageFriendSite"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:PSL.Controls"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             Background="Transparent">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= 左栏：友站列表 =================
+             照 PCL `Pages/PageSelectLeft.xaml`：
+               MyPageLeft{ AnimatedControl="PanList" } > AdornerDecorator > Grid(Auto / 1* / 5)
+               > MyScrollViewer{ MaxWidth=300 MinWidth=250 } > StackPanel x:Name="PanList"
+             列表内容由 PageFriendSite.xaml.cs 的 BuildList() 动态生成
+             （每项 MyListItem{ RadioBox, Height=40, MinPaddingRight=30, Title=名称, Info=域名 }）。 -->
+        <ctl:PclPageLeft x:Name="PanLeft" Grid.Column="0" AnimatedControl="PanList">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="5" />
+                </Grid.RowDefinitions>
+                <ScrollViewer x:Name="PanBack" Grid.Row="1" MinWidth="250" MaxWidth="300"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="PanList" />
+                </ScrollViewer>
+            </Grid>
+        </ctl:PclPageLeft>
+
+        <!-- ================= 右栏：内置浏览器 =================
+             外层结构照 PCL `Pages/PageDownload/Resource/PageResource.xaml`：
+               MyScrollViewer > StackPanel Margin="25"，顶部一张「搜索」卡片，
+               下面直接是内容区（这里内容区换成 WebView2 与它的加载/失败提示）。 -->
+        <ctl:PclPageRight x:Name="PanRight" Grid.Column="1" AnimatedControl="PanMain">
+            <Grid x:Name="PanMain" Margin="25,25,25,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- 地址栏卡片（照 PCL 的搜索卡片：Title + 内容 StackPanel Margin="25,40,25,15"） -->
+                <ctl:PclCard Grid.Row="0" Margin="0,0,0,15" Title="友站">
+                    <Grid Margin="25,40,25,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Column="0" Height="34" VerticalAlignment="Center">
+                            <TextBox x:Name="TxtUrl" KeyDown="TxtUrl_KeyDown" VerticalContentAlignment="Center"
+                                     Padding="8,0" />
+                        </Grid>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0"
+                                    VerticalAlignment="Center">
+                            <Button Style="{StaticResource BtnBase}" Content="前往" MinWidth="86"
+                                    Padding="13,0" Click="BtnGo_Click" />
+                            <Button Style="{StaticResource BtnBase}" Content="刷新" MinWidth="86"
+                                    Padding="13,0" Margin="10,0,0,0" Click="BtnRefresh_Click" />
+                            <Button Style="{StaticResource BtnBase}" Content="在浏览器打开" MinWidth="110"
+                                    Padding="13,0" Margin="10,0,0,0" Click="BtnOpenExternal_Click" />
+                        </StackPanel>
+                    </Grid>
+                </ctl:PclCard>
+
+                <!-- 浏览器本体 -->
+                <Grid Grid.Row="1">
+                    <wv2:WebView2 x:Name="Browser" Visibility="Collapsed" />
+
+                    <!-- 加载 / 失败提示（照 PCL 的空态卡结构） -->
+                    <ctl:PclCard x:Name="PanEmpty" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Margin="40">
+                        <StackPanel Margin="20,17">
+                            <TextBlock x:Name="LabEmptyTitle" Text="正在加载" FontSize="19"
+                                       HorizontalAlignment="Center" Margin="0,0,0,9"
+                                       Foreground="{StaticResource ColorBrush3}" />
+                            <Rectangle Height="2" HorizontalAlignment="Stretch"
+                                       Fill="{StaticResource ColorBrush3}" />
+                            <TextBlock x:Name="LabEmptyContent" Margin="10,15,10,5" TextWrapping="Wrap"
+                                       MaxWidth="420" TextAlignment="Center"
+                                       Foreground="{StaticResource ColorBrushGray1}"
+                                       Text="正在打开友站…" />
+                        </StackPanel>
+                    </ctl:PclCard>
+                </Grid>
+            </Grid>
+        </ctl:PclPageRight>
+    </Grid>
+</ctl:PclPage>

@@ -1,0 +1,111 @@
+<ctl:PclPage x:Class="PSL.Pages.PageDownloadDetail"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:PSL.Controls"
+             Background="Transparent">
+    <ctl:PclPageRight x:Name="PanRight" AnimatedControl="PanMain">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel x:Name="PanMain" Margin="25">
+
+                <!-- 顶部返回卡（照 PCL PageDownloadInstall.xaml:20-25 的 PanSelect 结构：
+                     Height=62 的卡 + 左侧返回按钮 + 图片 + 名称输入框，这里名称用 TextBlock） -->
+                <ctl:PclCard Margin="0,15,0,15" Height="62">
+                    <Grid>
+                        <Button Style="{StaticResource BtnIcon}" HorizontalAlignment="Left" Margin="8,0,0,0"
+                                ToolTip="返回" Click="BtnBack_Click">
+                            <Path Data="{StaticResource IconBack}" Stretch="Uniform" Width="14" Height="14"
+                                  Fill="{StaticResource ColorBrush1}" />
+                        </Button>
+                        <Border Margin="52,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Width="38" Height="38" CornerRadius="6" Background="{StaticResource BrushPrimaryPale}">
+                            <Image x:Name="ImgLogo" Width="34" Height="34" Stretch="UniformToFill" />
+                        </Border>
+                        <TextBlock x:Name="TxtName" Margin="104,0,16,0" VerticalAlignment="Center"
+                                   FontSize="15" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                </ctl:PclCard>
+
+                <!-- 简介（照 PCL 详情页的「简介」卡） -->
+                <ctl:PclCard Margin="0,0,0,15" Title="简介">
+                    <StackPanel Margin="25,40,25,18">
+                        <TextBlock x:Name="TxtSub" Margin="0,0,0,8" TextWrapping="Wrap" LineHeight="19"
+                                   Foreground="{StaticResource ColorBrushGray2}" />
+                        <TextBlock x:Name="TxtDesc" TextWrapping="Wrap" LineHeight="20"
+                                   Foreground="{StaticResource ColorBrushGray1}" />
+                        <ItemsControl x:Name="TagList" Margin="0,12,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource ColorBrushGray7}" CornerRadius="4"
+                                            Padding="8,3" Margin="0,0,6,4">
+                                        <TextBlock Text="{Binding}" FontSize="11"
+                                                   Foreground="{StaticResource ColorBrushGray2}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ctl:PclCard>
+
+                <!-- 图片（照 PCL 详情页的「图片」卡，横排最多 3 张） -->
+                <ctl:PclCard x:Name="CardImages" Margin="0,0,0,15" Title="图片" Visibility="Collapsed">
+                    <StackPanel Margin="25,40,25,18" Orientation="Horizontal">
+                        <Border Width="200" Height="130" CornerRadius="6" Background="{StaticResource ColorBrushGray8}">
+                            <Image x:Name="Img1" Stretch="Uniform" />
+                        </Border>
+                        <Border Width="200" Height="130" CornerRadius="6" Margin="12,0,0,0"
+                                Background="{StaticResource ColorBrushGray8}" x:Name="Box2" Visibility="Collapsed">
+                            <Image x:Name="Img2" Stretch="Uniform" />
+                        </Border>
+                        <Border Width="200" Height="130" CornerRadius="6" Margin="12,0,0,0"
+                                Background="{StaticResource ColorBrushGray8}" x:Name="Box3" Visibility="Collapsed">
+                            <Image x:Name="Img3" Stretch="Uniform" />
+                        </Border>
+                    </StackPanel>
+                </ctl:PclCard>
+
+                <!-- 操作（照 PCL 详情页的「下载」卡） -->
+                <ctl:PclCard Margin="0,0,0,15" Title="获取">
+                    <StackPanel Margin="25,40,25,18">
+                        <Grid Height="28" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="大小" VerticalAlignment="Center" Margin="0,0,25,0" />
+                            <TextBlock x:Name="TxtSize" Grid.Column="1" VerticalAlignment="Center"
+                                       Foreground="{StaticResource ColorBrushGray2}" />
+                            <TextBlock Text="日期" Grid.Row="1" VerticalAlignment="Center" Margin="0,0,25,0"
+                                       x:Name="LabDate" />
+                            <TextBlock x:Name="TxtDate" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center"
+                                       Foreground="{StaticResource ColorBrushGray2}" />
+                        </Grid>
+                        <Grid Height="28" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="日期" VerticalAlignment="Center" Margin="0,0,25,0" />
+                            <TextBlock x:Name="TxtDateInner" Grid.Column="1" VerticalAlignment="Center"
+                                       Foreground="{StaticResource ColorBrushGray2}" />
+                        </Grid>
+                        <Grid Height="35" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="BtnAction" Style="{StaticResource BtnPrimary}" Content="下载"
+                                    MinWidth="140" Padding="13,0" Margin="0,0,20,0" Click="BtnAction_Click" />
+                            <Button Style="{StaticResource BtnBase}" Content="打开资源站"
+                                    MinWidth="140" Padding="13,0" Grid.Column="1" Click="BtnOpenSite_Click" />
+                        </Grid>
+                    </StackPanel>
+                </ctl:PclCard>
+            </StackPanel>
+        </ScrollViewer>
+    </ctl:PclPageRight>
+</ctl:PclPage>

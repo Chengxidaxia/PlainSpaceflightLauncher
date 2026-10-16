@@ -1,0 +1,321 @@
+<Window x:Class="PSL.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PlainSpaceflightLauncher"
+        Width="1060" Height="680" MinWidth="900" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ResizeMode="CanMinimize"
+        Background="{x:Null}"
+        FontFamily="{StaticResource AppFont}"
+        FontSize="{StaticResource FontSizeNormal}"
+        AllowDrop="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        DragOver="Window_DragOver"
+        Drop="Window_Drop"
+        Closing="Window_Closing">
+
+    <Window.Resources>
+
+        <!-- ============ 标题栏导航按钮（对应 PCL 的 MyRadioButton / ColorState.White）
+             MyRadioButton.xaml.vb：MinHeight/MaxHeight 27、CornerRadius 13.5、
+             图标 Margin 12,0,0,0 / MaxWidth-MaxHeight 16、文字 Margin 8,0,12,0。
+             常态底 ColorSemiTransparent + 白字；指向 #32eaf2fe；按下 #78eaf2fe；
+             选中：底纯白、图标与文字 ColorBrush3。 ============ -->
+        <Style x:Key="TitleNavButton" TargetType="RadioButton">
+            <Setter Property="Height" Value="27" />
+            <Setter Property="Margin" Value="5,0" />
+            <Setter Property="Padding" Value="2,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="{StaticResource ColorBrushWhite}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="{StaticResource ColorBrushSemiTransparent}"
+                                CornerRadius="13.5" MinHeight="27" MaxHeight="27">
+                            <StackPanel Orientation="Horizontal">
+                                <Path x:Name="Ico" Stretch="Uniform" Width="16" Height="16"
+                                      Margin="12,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                      Fill="{StaticResource ColorBrushWhite}"
+                                      Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <TextBlock x:Name="Txt" Text="{TemplateBinding Content}"
+                                           Margin="8,0,12,0" VerticalAlignment="Center"
+                                           Foreground="{StaticResource ColorBrushWhite}" />
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrushTitleNavHover}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrushWhite}" />
+                                <Setter TargetName="Ico" Property="Fill" Value="{StaticResource ColorBrush3}" />
+                                <Setter TargetName="Txt" Property="Foreground" Value="{StaticResource ColorBrush3}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrushTitleNavDown}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ============ 标题栏窗口按钮（对应 PCL 的 MyIconButton Theme=White，28x28，
+             LogoScale 0.72，常态图标 ColorBrush8，指向底 #32ffffff） ============ -->
+        <Style x:Key="TitleCaptionButton" TargetType="Button">
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="1000">
+                            <Path x:Name="Ico" Stretch="Uniform" Width="13" Height="13"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Fill="{StaticResource ColorBrush8}"
+                                  Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#32FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- PanBack：窗体四周留出透明边距（PCL 为 10），边缘由 8 个渐变热区构成柔和投影。
+         入场动画挂在 PanBack.RenderTransform 上（PCL 的 TransformRotate / TransformPos）。 -->
+    <Grid x:Name="PanBack" Margin="10" UseLayoutRounding="True" SnapsToDevicePixels="True">
+        <Grid.RenderTransform>
+            <TransformGroup>
+                <RotateTransform x:Name="TransformRotate" Angle="-4" />
+                <TranslateTransform x:Name="TransformPos" X="0" Y="60" />
+            </TransformGroup>
+        </Grid.RenderTransform>
+
+        <!-- ============================================================
+             缩放热区（对应 PCL 的 ResizerT/B/L/R/LT/LB/RB/RT）
+             它们的 Fill 就是 PCL 窗体的柔和边缘投影：
+             四边 8px、四角 13px，黑 → 透明，最深处 #21000000。
+             必须排在 BorderForm 之前，圆角缺口处才能露出投影。
+             ============================================================ -->
+        <Rectangle Height="8" VerticalAlignment="Top" Margin="13,0" Cursor="SizeNS"
+                   Stroke="{x:Null}" StrokeThickness="0.0001" Tag="Top"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#21000000" Offset="1" />
+                    <GradientStop Color="#11000000" Offset="0.7" />
+                    <GradientStop Color="#00000000" Offset="0" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Height="8" VerticalAlignment="Bottom" Margin="13,0" Cursor="SizeNS"
+                   Stroke="{x:Null}" StrokeThickness="0.0001" Tag="Bottom"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#21000000" Offset="0" />
+                    <GradientStop Color="#11000000" Offset="0.3" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Width="8" HorizontalAlignment="Left" Margin="0,13" Cursor="SizeWE"
+                   Stroke="{x:Null}" StrokeThickness="0.0001" Tag="Left"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                    <GradientStop Color="#21000000" Offset="1" />
+                    <GradientStop Color="#11000000" Offset="0.7" />
+                    <GradientStop Color="#00000000" Offset="0" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Width="8" HorizontalAlignment="Right" Margin="0,13" Cursor="SizeWE"
+                   Stroke="{x:Null}" StrokeThickness="0.0001" Tag="Right"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                    <GradientStop Color="#21000000" Offset="0" />
+                    <GradientStop Color="#11000000" Offset="0.3" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Width="13" Height="13" HorizontalAlignment="Left" VerticalAlignment="Top"
+                   Cursor="SizeNWSE" Stroke="{x:Null}" StrokeThickness="0.0001" Tag="TopLeft"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="1,1" GradientOrigin="1,1" RadiusX="1" RadiusY="1">
+                    <GradientStop Color="#21000000" Offset="0.2" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Width="13" Height="13" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                   Cursor="SizeNESW" Stroke="{x:Null}" StrokeThickness="0.0001" Tag="BottomLeft"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="1,0" GradientOrigin="1,0" RadiusX="1" RadiusY="1">
+                    <GradientStop Color="#21000000" Offset="0.2" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Cursor="SizeNWSE" Stroke="{x:Null}" StrokeThickness="0.0001" Tag="BottomRight"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="0,0" GradientOrigin="0,0" RadiusX="1" RadiusY="1">
+                    <GradientStop Color="#21000000" Offset="0.2" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+        <Rectangle Width="13" Height="13" HorizontalAlignment="Right" VerticalAlignment="Top"
+                   Cursor="SizeNESW" Stroke="{x:Null}" StrokeThickness="0.0001" Tag="TopRight"
+                   MouseLeftButtonDown="Resizer_MouseLeftButtonDown">
+            <Rectangle.Fill>
+                <RadialGradientBrush Center="0,1" GradientOrigin="0,1" RadiusX="1" RadiusY="1">
+                    <GradientStop Color="#21000000" Offset="0.2" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </RadialGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!-- ============================================================
+             窗体主体（对应 PCL 的 BorderForm，Margin 8、圆角 6、矩形裁剪）
+             ============================================================ -->
+        <Border x:Name="BorderForm" Margin="8" CornerRadius="6"
+                Background="{StaticResource ColorBrushWhite}">
+            <Border.Clip>
+                <RectangleGeometry x:Name="RectForm" RadiusX="6" RadiusY="6" />
+            </Border.Clip>
+
+            <!-- PanForm：标题栏 48 + 内容区；底色即 PCL 的 PanForm.Background -->
+            <Grid x:Name="PanForm">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- ================= 标题栏 ================= -->
+                <Grid x:Name="PanTitle" Grid.Row="0" Height="48"
+                      Background="{StaticResource BrushTitleBarGradient}"
+                      MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+
+                    <!-- 窗口按钮：关闭右距 12，最小化右距 44（即与关闭间隔 4） -->
+                    <Button x:Name="BtnMinimize" Style="{StaticResource TitleCaptionButton}"
+                            Tag="{StaticResource IconMinimize}" ToolTip="最小化"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,44,0"
+                            Click="BtnMinimize_Click" />
+                    <Button x:Name="BtnClose" Style="{StaticResource TitleCaptionButton}"
+                            Tag="{StaticResource IconClose}" ToolTip="关闭"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+                            Click="BtnClose_Click" />
+
+                    <!-- ================= 导航区：双层结构 =================
+                         照 PCL `FormMain.xaml:111-137`：主层 PanTitleMain（导航按钮）
+                         与副层 PanTitleInner（返回箭头 + 页面名）叠在同一位置，
+                         靠 Margin.X / Opacity 动画互相替换（见 FormMain.xaml.vb:1427-1433 / 1550-1556）。
+                         导航项严格按 PCL 的 `PanTitleSelect`（FormMain.xaml:120-131）：
+                         启动 / 下载 / 联机 / 设置 / 更多 —— 本项目保留主页/下载/友站/设置/帮助。
+                         「友站」对应 PCL 的「联机」位（BtnTitleSelect2，FormMain.xaml:123），
+                         是一个打开内置浏览器的主页面，不是副页面。
+                         PCL 的「版本选择」「版本设置」是副页面（PageType 注释：这是一个副页面），
+                         **不在导航栏**，只能从主页左栏按钮进入。 -->
+                    <Grid UseLayoutRounding="False" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+
+                        <!-- 主层：1* / Auto / 1* 三列居中 -->
+                        <Grid x:Name="PanTitleMain" HorizontalAlignment="Left"
+                              Width="{Binding ActualWidth, ElementName=PanTitle, Mode=OneWay}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <!-- 标志：PCL 的 ShapeTitleLogo 是 PCL 字形，本项目不用其标志图形，
+                                 改用本项目自己的文字标识，排版位置沿用 PCL（位于主层网格的最左列，
+                                 左边距 18，见 FormMain.xaml:117-118）。
+                                 **必须放在 PanTitleMain 里面**：PCL 的 logo 随主层一起淡出，
+                                 若放在外层则切到副页面时会与「返回 + 页面名」重叠。 -->
+                            <TextBlock Grid.Column="0" x:Name="TitleLogoDefault" Text="PSL" Foreground="White"
+                                       FontSize="19" FontWeight="Bold"
+                                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                                       Margin="18,0,0,0" IsHitTestVisible="False" />
+                            <TextBlock Grid.Column="0" x:Name="TitleLogoText" Text="PSL" Foreground="White"
+                                       FontSize="15" FontWeight="SemiBold"
+                                       HorizontalAlignment="Left" VerticalAlignment="Center"
+                                       Margin="18,0,0,0" IsHitTestVisible="False" Visibility="Collapsed" />
+
+                            <StackPanel Grid.Column="1" x:Name="PanTitleSelect" Orientation="Horizontal"
+                                        Height="27" VerticalAlignment="Center" Margin="13,0">
+                                <RadioButton x:Name="NavHome" Style="{StaticResource TitleNavButton}" Content="主页"
+                                             Tag="{StaticResource IconLaunch}" IsChecked="True" Checked="Nav_Checked" />
+                                <RadioButton x:Name="NavDownload" Style="{StaticResource TitleNavButton}" Content="下载"
+                                             Tag="{StaticResource IconDownload}" Checked="Nav_Checked" />
+                                <RadioButton x:Name="NavFriendSite" Style="{StaticResource TitleNavButton}" Content="友站"
+                                             Tag="{StaticResource IconFriendSite}" Checked="Nav_Checked" />
+                                <RadioButton x:Name="NavSettings" Style="{StaticResource TitleNavButton}" Content="设置"
+                                             Tag="{StaticResource IconSetup}" Checked="Nav_Checked" />
+                                <RadioButton x:Name="NavHelp" Style="{StaticResource TitleNavButton}" Content="帮助"
+                                             Tag="{StaticResource IconHelp}" Checked="Nav_Checked" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 副层：返回箭头 + 页面名（PCL 的 BtnTitleInner / LabTitleInner）
+                             初值 Margin="-16,0,0,0"、Opacity=0、Collapsed 与源码一致。 -->
+                        <Grid x:Name="PanTitleInner" Visibility="Collapsed" Opacity="0" Margin="-16,0,0,0"
+                              HorizontalAlignment="Left"
+                              Width="{Binding ActualWidth, ElementName=PanTitle, Mode=OneWay}">
+                            <Button x:Name="BtnTitleInner" Style="{StaticResource TitleCaptionButton}"
+                                    HorizontalAlignment="Left" Margin="12,0,0,0"
+                                    Tag="{StaticResource IconBack}" ToolTip="返回"
+                                    Click="BtnTitleInner_Click" />
+                            <TextBlock x:Name="LabTitleInner" VerticalAlignment="Center"
+                                       Margin="47,1,60,0" HorizontalAlignment="Left"
+                                       Foreground="{StaticResource ColorBrush8}" FontSize="15"
+                                       IsHitTestVisible="False" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                <!-- 背景图片（PCL 的 PanBackground，挂在页面宿主底下） -->
+                <Border Grid.Row="1" x:Name="BackgroundHost" Visibility="Collapsed" IsHitTestVisible="False" />
+
+                <!-- ================= 页面宿主（PCL 的 PanForm 底色：淡蓝渐变） ================= -->
+                <Border Grid.Row="1" Background="{StaticResource BrushPageBackground}">
+                    <ContentControl x:Name="PageHost" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ================= 拖拽安装遮罩 ================= -->
+        <Border x:Name="DropOverlay" Visibility="Collapsed" Background="#CC127AE1" Margin="8"
+                CornerRadius="6">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Path Data="{StaticResource IconDownload}" Stretch="Uniform" Width="56" Height="56"
+                      Fill="{StaticResource ColorBrushWhite}" HorizontalAlignment="Center" />
+                <TextBlock Text="松开鼠标，自动识别并安装" Foreground="{StaticResource ColorBrushWhite}"
+                           FontSize="18" FontWeight="Bold" Margin="0,16,0,0" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- ================= 轻提示 ================= -->
+        <Border x:Name="ToastHost" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Margin="0,0,0,38" Visibility="Collapsed" Background="#F2333E48" CornerRadius="6"
+                Padding="18,10" IsHitTestVisible="False">
+            <TextBlock x:Name="ToastText" Foreground="{StaticResource ColorBrushWhite}"
+                       FontSize="{StaticResource FontSizeNormal}" />
+        </Border>
+    </Grid>
+</Window>

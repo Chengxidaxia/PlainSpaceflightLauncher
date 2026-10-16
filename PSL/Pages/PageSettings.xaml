@@ -1,0 +1,354 @@
+<ctl:PclPage x:Class="PSL.Pages.PageSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:PSL.Controls"
+             Background="Transparent">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= 左栏（对应 PCL 的 PageSetupLeft） =================
+             PCL 的 `PageSetup/PageSetupLeft.xaml:5` 只写了 `d:DesignWidth="152"`（设计时提示，运行时无效），
+             没有真实 Width，宽度由左栏内容自然撑开。 -->
+        <ctl:PclPageLeft x:Name="PanLeft" Grid.Column="0" AnimatedControl="PanItem">
+            <StackPanel x:Name="PanItem" Margin="0,12,0,0">
+                <RadioButton x:Name="NavGeneral" Style="{StaticResource NavItem}" Content="常规"
+                             Tag="{StaticResource IconSetup}" Checked="Nav_Checked" />
+                <RadioButton x:Name="NavUi" Style="{StaticResource NavItem}" Content="个性化"
+                             Tag="{StaticResource IconTexturePack}" Checked="Nav_Checked" />
+                <RadioButton x:Name="NavAbout" Style="{StaticResource NavItem}" Content="关于"
+                             Tag="{StaticResource IconAbout}" IsChecked="True" Checked="Nav_Checked" />
+                <RadioButton x:Name="NavLog" Style="{StaticResource NavItem}" Content="运行日志"
+                             Tag="{StaticResource IconLog}" Checked="Nav_Checked" />
+            </StackPanel>
+        </ctl:PclPageLeft>
+
+        <!-- ================= 右栏（对应 PCL 的 PageSetupSystem / PageOtherAbout） ================= -->
+        <ctl:PclPageRight x:Name="PanRight" Grid.Column="1" AnimatedControl="PanMain">
+            <ScrollViewer x:Name="PanBack" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <Grid x:Name="PanMain" Margin="25,25,25,10">
+
+                    <!-- ============ 常规 ============ -->
+                    <StackPanel x:Name="PanGeneral">
+                        <ctl:PclCard Margin="0,0,0,15" Title="常规">
+                            <StackPanel Margin="25,40,25,15">
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="126" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="游戏库目录" VerticalAlignment="Center" />
+                                    <TextBox x:Name="TxtLibrary" Grid.Column="1" IsReadOnly="True"
+                                             ToolTip="存放各个 SFS 版本文件夹的目录（.sfs）" />
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                                        <Button Style="{StaticResource BtnBase}" Content="更改"
+                                                MinWidth="90" Padding="13,0" Click="ChangeLibrary_Click" />
+                                        <Button Style="{StaticResource BtnBase}" Content="打开" MinWidth="90"
+                                                Padding="13,0" Margin="8,0,0,0" Click="OpenLibrary_Click" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="126" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="下载线程数" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <ComboBox x:Name="CmbThreads" Width="140"
+                                                  SelectionChanged="CmbThreads_SelectionChanged" />
+                                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource ColorBrushGray3}"
+                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                   Text="直链下载时使用的分段线程数" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="126" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="没有直链时" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1">
+                                        <CheckBox x:Name="ChkPreferDirect" Content="优先尝试多线程直链下载"
+                                                  Click="ChkPreferDirect_Click" />
+                                        <TextBlock Margin="26,6,0,0" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource ColorBrushGray3}"
+                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                   Text="关闭后，所有资源都会直接用浏览器打开蓝奏云网盘页面下载。" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <!-- 「汉化版功能」已改为按版本存储，入口在 版本设置 → 设置 -->
+                        <ctl:PclCard Margin="0,0,0,15" Title="提示">
+                            <StackPanel Margin="25,40,25,15">
+                                <TextBlock TextWrapping="Wrap" LineHeight="19"
+                                           Foreground="{StaticResource ColorBrushGray1}"
+                                           Text="「汉化版功能」（字体 / 语言包管理）是**按版本**设置的：请到主页左下角「版本设置」→「设置」里，为每个版本单独开启。&#x0a;启动器的界面外观请在左边「个性化」里调整。" />
+                            </StackPanel>
+                        </ctl:PclCard>
+                    </StackPanel>
+
+                    <!-- ============ 个性化（照 PCL PageSetupUI.xaml 的分组） ============ -->
+                    <StackPanel x:Name="PanUi" Visibility="Collapsed">
+                        <ctl:PclCard Margin="0,15,0,15" Title="基础">
+                            <StackPanel Margin="25,40,25,17">
+                                <TextBlock Text="主题预设" Margin="0,0,0,9" />
+                                <StackPanel Orientation="Horizontal" x:Name="PanThemePresets" />
+                                <Grid Margin="0,16,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="28" />
+                                        <RowDefinition Height="9" />
+                                        <RowDefinition Height="28" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                                               Text="色调" Margin="0,0,25,0" />
+                                    <Slider x:Name="SliderHue" Grid.Column="1" Minimum="0" Maximum="360"
+                                            VerticalAlignment="Center" IsSnapToTickEnabled="True"
+                                            TickFrequency="1" ValueChanged="SliderHueSat_ValueChanged" />
+                                    <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"
+                                               Text="饱和度" Margin="0,0,25,0" />
+                                    <Slider x:Name="SliderSat" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100"
+                                            VerticalAlignment="Center" IsSnapToTickEnabled="True"
+                                            TickFrequency="1" ValueChanged="SliderHueSat_ValueChanged" />
+                                </Grid>
+                                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" LineHeight="18"
+                                           Foreground="{StaticResource ColorBrushGray3}"
+                                           FontSize="{StaticResource FontSizeSmall}"
+                                           Text="颜色由 PCL 的 FromHSL2 分段亮度算法实时生成（8 个角色色 + 标题栏渐变）。" />
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="背景图片">
+                            <StackPanel Margin="25,40,25,20">
+                                <Grid Height="22" Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                                               Text="不透明度" Margin="0,0,25,0" />
+                                    <Slider x:Name="SliderBgOpacity" Grid.Column="1" Minimum="0" Maximum="100"
+                                            VerticalAlignment="Center" IsSnapToTickEnabled="True"
+                                            TickFrequency="1" ValueChanged="SliderBgOpacity_ValueChanged" />
+                                </Grid>
+                                <TextBlock Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="18"
+                                           Foreground="{StaticResource ColorBrushGray3}"
+                                           FontSize="{StaticResource FontSizeSmall}"
+                                           Text="把图片放进下面的文件夹（支持 png / jpg / webp），点「刷新背景图片」会随机加载其中一张。" />
+                                <Grid Height="35">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Style="{StaticResource BtnBase}" Content="打开文件夹"
+                                            MinWidth="140" Padding="13,0" Margin="0,0,20,0"
+                                            Click="BtnBackgroundOpen_Click" />
+                                    <Button Style="{StaticResource BtnBase}" Content="刷新背景图片"
+                                            MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1"
+                                            Click="BtnBackgroundRefresh_Click" />
+                                    <Button Style="{StaticResource BtnBase}" Content="清空背景图片"
+                                            MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2"
+                                            Click="BtnBackgroundClear_Click" />
+                                </Grid>
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="标题栏">
+                            <StackPanel Margin="25,40,25,15">
+                                <StackPanel Orientation="Horizontal" x:Name="PanLogoTypes" />
+                                <Grid Margin="0,14,0,0" x:Name="PanLogoText">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="1*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                                               Text="标题栏文本" Margin="0,0,25,0" />
+                                    <TextBox x:Name="TxtLogoText" Grid.Column="1" MaxLength="60"
+                                             TextChanged="TxtLogoText_TextChanged" />
+                                </Grid>
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="功能隐藏">
+                            <StackPanel Margin="25,38,25,15">
+                                <TextBlock Margin="0,0,0,10" TextWrapping="Wrap"
+                                           Foreground="{StaticResource ColorBrushGray1}"
+                                           Text="隐藏不需要的页面（导航栏里将不再显示）。" />
+                                <StackPanel Orientation="Horizontal" x:Name="PanHiddenPages" />
+                            </StackPanel>
+                        </ctl:PclCard>
+                    </StackPanel>
+
+                    <!-- ============ 关于 ============ -->
+                    <StackPanel x:Name="PanAbout" Visibility="Collapsed">
+                        <ctl:PclCard Margin="0,0,0,15" Title="关于">
+                            <StackPanel Margin="25,40,25,20">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="52" Height="52" CornerRadius="10"
+                                            Background="{StaticResource BrushPrimary}">
+                                        <TextBlock Text="S" FontSize="28" FontWeight="Bold" Foreground="White"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="PlainSpaceflightLauncher" FontSize="18"
+                                                   FontWeight="Bold" />
+                                        <TextBlock x:Name="TxtAboutVersion" Margin="0,4,0,0"
+                                                   Foreground="{StaticResource ColorBrushGray2}"
+                                                   FontSize="{StaticResource FontSizeSmall}" />
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" LineHeight="21"
+                                           Foreground="{StaticResource ColorBrushGray1}"
+                                           Text="PlainSpaceflightLauncher（简称 PSL）是一个面向 Spaceflight Simulator 的第三方启动器，用于管理多个游戏版本，以及模组 / 涂装包 / 零件包 / 星系包 / 蓝图等资源。" />
+
+                                <ctl:PclHint Margin="0,14,0,0" Theme="Blue">
+                                    <TextBlock TextWrapping="Wrap" LineHeight="20"
+                                               Foreground="{StaticResource ColorBrushGray1}"
+                                               Text="支持范围：仅支持 Spaceflight Simulator 1.6 及以上版本。DLL 模组仅 PC / Steam 版可用，移动端（Android / iOS）无法加载。" />
+                                </ctl:PclHint>
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="作者">
+                            <Grid Margin="25,40,25,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Chengxidaxia" FontWeight="SemiBold" FontSize="14" />
+                                    <TextBlock Text="PlainSpaceflightLauncher 的作者与维护者" Margin="0,4,0,0"
+                                               Foreground="{StaticResource ColorBrushGray3}"
+                                               FontSize="{StaticResource FontSizeSmall}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource BtnBase}" Content="GitHub 主页"
+                                            MinWidth="140" Padding="13,0"
+                                            Tag="https://github.com/Chengxidaxia"
+                                            ToolTip="https://github.com/Chengxidaxia"
+                                            Click="OpenLink_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="鸣谢">
+                            <StackPanel Margin="25,40,25,20">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Plain Craft Launcher 2（PCL2）" FontWeight="SemiBold" />
+                                        <TextBlock Text="作者：龙腾猫跃　—　PSL 的界面风格参考自 PCL2，在此向原作者与社区致谢。"
+                                                   Margin="0,5,0,0" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource ColorBrushGray3}"
+                                                   FontSize="{StaticResource FontSizeSmall}" LineHeight="18" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource BtnBase}" Content="GitHub"
+                                            MinWidth="110" Padding="13,0" VerticalAlignment="Center"
+                                            Tag="https://github.com/Meloong-Git/PCL"
+                                            Click="OpenLink_Click" />
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="SFS 汉化模组站（sfszhmod）" FontWeight="SemiBold" />
+                                        <TextBlock Text="模组 / 蓝图等资源数据来自该站，在此向站长与全体模组作者致谢。"
+                                                   Margin="0,5,0,0" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource ColorBrushGray3}"
+                                                   FontSize="{StaticResource FontSizeSmall}" LineHeight="18" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource BtnBase}" Content="访问站点"
+                                            MinWidth="110" Padding="13,0" VerticalAlignment="Center"
+                                            Tag="https://sfszhmod.pages.dev"
+                                            Click="OpenLink_Click" />
+                                </Grid>
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="开源协议">
+                            <StackPanel Margin="25,40,25,20">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="GNU General Public License v3.0" FontWeight="SemiBold" />
+                                    <Border Margin="9,0,0,0" Background="{StaticResource BrushPrimaryPale}"
+                                            CornerRadius="4" Padding="7,1" VerticalAlignment="Center">
+                                        <TextBlock Text="GPL-3.0-only"
+                                                   Foreground="{StaticResource BrushPrimary}"
+                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                   FontWeight="SemiBold" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap" LineHeight="20"
+                                           Foreground="{StaticResource ColorBrushGray1}"
+                                           Text="本项目采用 GPL-3.0：允许商用与自由分发，但任何基于本项目的修改与衍生作品都必须以同样的协议开源，并保留版权声明。完整协议文本见随附的 LICENSE 文件。" />
+                                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                    <Button Style="{StaticResource BtnBase}" Content="查看协议全文"
+                                            MinWidth="130" Padding="13,0"
+                                            Tag="https://www.gnu.org/licenses/gpl-3.0.html"
+                                            Click="OpenLink_Click" />
+                                    <Button Style="{StaticResource BtnBase}" Content="打开 LICENSE 文件"
+                                            MinWidth="140" Padding="13,0" Margin="8,0,0,0"
+                                            Click="OpenLicense_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard Margin="0,0,0,15" Title="免责声明">
+                            <StackPanel Margin="25,40,25,20">
+                                <TextBlock TextWrapping="Wrap" LineHeight="20"
+                                           Foreground="{StaticResource ColorBrushGray1}"
+                                           Text="PSL 是独立开发的第三方工具，与 Spaceflight Simulator 的开发者 Team Curiosity、Steam 平台，以及 Plain Craft Launcher 的开发者龙腾猫跃均无隶属或合作关系。本工具不包含任何游戏本体，也不绕过任何正版验证。请通过正规渠道购买并支持游戏本体。" />
+                                <TextBlock Margin="0,12,0,0" TextWrapping="Wrap" LineHeight="20"
+                                           Foreground="{StaticResource ColorBrushGray3}"
+                                           FontSize="{StaticResource FontSizeSmall}"
+                                           Text="本项目的界面风格参考自龙腾猫跃开发的 Plain Craft Launcher 2（PCL2），在此致以诚挚谢意。" />
+                            </StackPanel>
+                        </ctl:PclCard>
+                    </StackPanel>
+
+                    <!-- ============ 日志 ============ -->
+                    <StackPanel x:Name="PanLog" Visibility="Collapsed">
+                        <ctl:PclCard Margin="0,0,0,15" Title="运行日志">
+                            <StackPanel Margin="25,40,25,20">
+                                <TextBlock TextWrapping="Wrap"
+                                           Foreground="{StaticResource ColorBrushGray1}"
+                                           Text="PSL 会把运行信息写入日志，排查问题时可以把它发给开发者。" />
+                                <TextBlock x:Name="TxtLogPath" Margin="0,12,0,0" TextWrapping="Wrap"
+                                           Foreground="{StaticResource ColorBrushGray3}"
+                                           FontSize="{StaticResource FontSizeSmall}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <Button Style="{StaticResource BtnBase}" Content="打开日志文件夹"
+                                            MinWidth="140" Padding="13,0" Click="OpenLog_Click" />
+                                    <Button Style="{StaticResource BtnBase}" Content="打开程序目录"
+                                            MinWidth="140" Padding="13,0" Margin="8,0,0,0"
+                                            Click="OpenAppDir_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </ctl:PclCard>
+                    </StackPanel>
+
+                </Grid>
+            </ScrollViewer>
+        </ctl:PclPageRight>
+    </Grid>
+</ctl:PclPage>

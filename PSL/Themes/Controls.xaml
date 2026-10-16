@@ -1,0 +1,704 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ===================== 全局字体 ===================== -->
+
+    <Style TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <!-- ===================== 左栏列表项（对应 PCL 的 MyListItem） =====================
+         常态 36px 高；悬停铺 ColorBrushBg1 圆角底；选中时左侧出现 5px ColorBrush3 竖条，
+         文字与图标转为 ColorBrush3。图标通过 Tag 传入 Geometry（见 Themes/PclIcons.xaml）。 -->
+
+    <Style x:Key="NavItem" TargetType="RadioButton">
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Margin" Value="2,1" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush1}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid Background="Transparent">
+                        <!-- RectBack：高 36（<40）时 PCL 取圆角 0；描边 ColorBrush6 -->
+                        <Border x:Name="RectBack" CornerRadius="0"
+                                Background="{StaticResource ColorBrushBg1}"
+                                BorderBrush="{StaticResource ColorBrush6}" BorderThickness="1"
+                                Opacity="0" IsHitTestVisible="False" />
+                        <Border x:Name="RectCheck" Width="5" CornerRadius="2"
+                                Background="{StaticResource ColorBrush3}"
+                                HorizontalAlignment="Left" VerticalAlignment="Stretch"
+                                Margin="-1,7,0,7" Opacity="0" IsHitTestVisible="False" />
+                        <Grid Margin="0,0,10,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path x:Name="Ico" Grid.Column="0"
+                                  Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                  Stretch="Uniform" Width="16" Height="16"
+                                  Margin="9,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                  Fill="{TemplateBinding Foreground}" />
+                            <TextBlock x:Name="Txt" Grid.Column="1" Text="{TemplateBinding Content}"
+                                       Margin="4,0,0,0" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{TemplateBinding Foreground}" />
+                        </Grid>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Tag" Value="{x:Null}">
+                            <Setter TargetName="Ico" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="Txt" Property="Margin" Value="14,0,0,0" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="RectBack" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="RectBack" Property="Opacity" Value="1" />
+                            <Setter TargetName="RectBack" Property="Background" Value="{StaticResource ColorBrush6}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="RectCheck" Property="Opacity" Value="1" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrush3}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 左栏容器（对应 PCL 的 PanLeft：底色 ColorBrushBackgroundTransparentSidebar，
+         右缘 4px 渐变分隔，与 PCL 的 RectLeftShadow 一致） -->
+    <Style x:Key="Sidebar" TargetType="Border">
+        <Setter Property="Width" Value="176" />
+        <Setter Property="Background" Value="{StaticResource ColorBrushBackgroundTransparentSidebar}" />
+        <Setter Property="BorderThickness" Value="0,0,4,0" />
+        <Setter Property="BorderBrush">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0" Opacity="0.04">
+                    <GradientStop Color="#000000" Offset="0" />
+                    <GradientStop Color="#00000000" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- 滚动条 Thumb（对应 PCL 的 MyThumb / Application.xaml）：
+         外层 ColorBrushSemiTransparent 底，内层用 Foreground 色、圆角 3、内缩 2。 -->
+    <Style x:Key="ScrollThumb" TargetType="Thumb">
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Stylus.IsPressAndHoldEnabled" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border Background="{StaticResource ColorBrushSemiTransparent}" SnapsToDevicePixels="True">
+                        <Border Background="{TemplateBinding Foreground}" CornerRadius="3" Margin="2" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 滚动条（对应 PCL 的 MyScrollBar：Width/MinWidth 8、圆角 2、
+         轨道仅在鼠标指向时可用 —— 与 PCL 的 IsEnabled={TemplateBinding IsMouseOver} 一致） -->
+    <Style TargetType="ScrollBar">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush1}" />
+        <Setter Property="Width" Value="8" />
+        <Setter Property="MinWidth" Value="8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Border CornerRadius="2">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True"
+                               IsEnabled="{TemplateBinding IsMouseOver}">
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource ScrollThumb}"
+                                       Foreground="{TemplateBinding Foreground}" />
+                            </Track.Thumb>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False" />
+                            </Track.IncreaseRepeatButton>
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False" />
+                            </Track.DecreaseRepeatButton>
+                        </Track>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Height" Value="8" />
+                <Setter Property="MinHeight" Value="8" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Border CornerRadius="2">
+                                <Track x:Name="PART_Track" IsDirectionReversed="False" Orientation="Horizontal"
+                                       IsEnabled="{TemplateBinding IsMouseOver}">
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource ScrollThumb}"
+                                               Foreground="{TemplateBinding Foreground}" />
+                                    </Track.Thumb>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Command="ScrollBar.PageRightCommand" Opacity="0" Focusable="False" />
+                                    </Track.IncreaseRepeatButton>
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Command="ScrollBar.PageLeftCommand" Opacity="0" Focusable="False" />
+                                    </Track.DecreaseRepeatButton>
+                                </Track>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ===================== 卡片（对应 PCL 的 MyCard） =====================
+         PCL 的卡片没有描边，只有 5px 圆角、245 透明度的白底与一圈淡阴影。 -->
+
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BrushCardBg}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusCard}" />
+        <Setter Property="Padding" Value="15,13" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Effect" Value="{StaticResource ShadowCard}" />
+    </Style>
+
+    <!-- 列表行卡片：更轻，不带阴影（用于大量重复项） -->
+    <Style x:Key="CardFlat" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource ColorBrushWhite}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBrushGray7}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusCard}" />
+        <Setter Property="Padding" Value="15,13" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- 可点击的行卡片 -->
+    <Style x:Key="CardRow" TargetType="Border" BasedOn="{StaticResource CardFlat}">
+        <Setter Property="Background" Value="{StaticResource ColorBrushWhite}" />
+    </Style>
+
+    <!-- ===================== 按钮基础模板 ===================== -->
+
+    <Style x:Key="BtnBase" TargetType="ButtonBase">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="MinWidth" Value="76" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush1}" />
+        <Setter Property="Background" Value="{StaticResource ColorBrushHalfWhite}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBrush1}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"
+                                          RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrush3}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrush3}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush6}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 主按钮（对应 PCL 的 Highlight 配色：描边与文字为 ColorBrush2，指向转 ColorBrush3） -->
+    <Style x:Key="BtnPrimary" TargetType="ButtonBase" BasedOn="{StaticResource BtnBase}">
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush2}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBrush2}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrush3}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrush3}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush6}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 无边框幽灵按钮（图标按钮 / 行内操作） -->
+    <Style x:Key="BtnGhost" TargetType="ButtonBase" BasedOn="{StaticResource BtnBase}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrush3}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush6}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 危险操作按钮（对应 PCL 的 Red 配色） -->
+    <Style x:Key="BtnDanger" TargetType="ButtonBase" BasedOn="{StaticResource BtnBase}">
+        <Setter Property="Foreground" Value="{StaticResource ColorBrushRedDark}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBrushRedDark}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                            CornerRadius="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrushRedLight}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrushRedBack}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushRedLight}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrushRedBack}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 小号按钮 -->
+    <Style x:Key="BtnSmall" TargetType="ButtonBase" BasedOn="{StaticResource BtnBase}">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+        <Setter Property="Padding" Value="10,0" />
+    </Style>
+
+    <!-- 启动按钮（对应 PCL 的 BtnLaunch：高 54、Highlight 配色、内边距 30,0,30,15） -->
+    <Style x:Key="BtnLaunch" TargetType="ButtonBase" BasedOn="{StaticResource BtnPrimary}">
+        <Setter Property="Height" Value="54" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="Padding" Value="30,0,30,15" />
+    </Style>
+
+    <!-- 圆形图标按钮（对应 PCL 的 MyIconButton，圆角 1000，图标取自 Tag 的 Geometry） -->
+    <Style x:Key="BtnIcon" TargetType="ButtonBase">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush4}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ButtonBase">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="1000">
+                        <Path x:Name="Ico" Stretch="Uniform" Width="14" Height="14"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Fill="{TemplateBinding Foreground}"
+                              Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- PCL 的 MyIconButton 指向时只把图标转 ColorBrush2，不铺底色 -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrush2}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray5}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- 白色主题图标按钮（标题栏窗口按钮用，对应 PCL MyIconButton Theme=White） -->
+    <Style x:Key="BtnIconWhite" TargetType="ButtonBase" BasedOn="{StaticResource BtnIcon}">
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush8}" />
+    </Style>
+
+    <!-- ===================== 文本框（对应 PCL 的 MyTextBox） =====================
+         出处：Application.xaml。常态描边 ColorBrushBg0(#73ABE3)，圆角 3，底 ColorBrushHalfWhite；
+         指向转 ColorBrush4 + ColorBrush7；聚焦转 ColorBrush3 + ColorBrush7；禁用 Gray5/Gray6。 -->
+
+    <Style TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush1}" />
+        <Setter Property="CaretBrush" Value="{StaticResource ColorBrush3}" />
+        <Setter Property="SelectionBrush" Value="{StaticResource ColorBrush3}" />
+        <Setter Property="Background" Value="{StaticResource ColorBrushHalfWhite}" />
+        <Setter Property="BorderBrush" Value="{StaticResource ColorBrushBg0}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="3">
+                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center" Focusable="False"
+                                      HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrush4}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrush3}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ColorBrushGray5}" />
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrushGray6}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== 复选框（对应 PCL 的 MyCheckBox） =====================
+         18x18、圆角 3、1.1px 描边；勾选后填色并与描边同色，文字左移 26。 -->
+
+    <Style TargetType="CheckBox">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush1}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Box" Width="18" Height="18" CornerRadius="3"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Background="{StaticResource ColorBrushHalfWhite}"
+                                BorderBrush="{StaticResource ColorBrush1}" BorderThickness="1.1">
+                            <Path x:Name="Check" Width="12" Height="12"
+                                  Data="M0,6L1.5,4.5 4.5,7.5 10.5,1.5 12,3 4.5,10.5 0,6z"
+                                  Fill="{Binding BorderBrush, ElementName=Box}"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Visibility="Collapsed" />
+                        </Border>
+                        <ContentPresenter Margin="26,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- 勾色自动跟随边框色（与 PCL 的 ShapeCheck 绑定 ShapeBorder.BorderBrush 一致） -->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ColorBrush2}" />
+                            <Setter TargetName="Check" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ColorBrush3}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource ColorBrushGray5}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== 下拉框 ===================== -->
+
+    <Style x:Key="ComboItem" TargetType="ComboBoxItem">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush6}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ComboBox">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ComboItem}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="Toggle" Focusable="False" ClickMode="Press"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Bd" Background="{StaticResource ColorBrushHalfWhite}"
+                                            BorderBrush="{StaticResource ColorBrushBg0}" BorderThickness="1"
+                                            CornerRadius="3">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <ContentPresenter Grid.Column="0" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                              Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                                                              ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                            <Path Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center"
+                                                  Data="M 0,0 L 4.5,4.5 L 9,0" Stroke="{StaticResource BrushTextSecondary}"
+                                                  StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource BrushBorderHover}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <!-- 弹出层（对应 PCL Application.xaml 的 ComboBox 模板）：
+                             白色圆角 3 底 + 一圈 Foreground(=ColorBrushBg0) 描边，PCL 没有额外阴影。 -->
+                        <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True"
+                               IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Fade"
+                               Focusable="False" SnapsToDevicePixels="True" VerticalOffset="-1.5">
+                            <Grid>
+                                <Border Background="{StaticResource ColorBrushWhite}" CornerRadius="3" />
+                                <Border CornerRadius="3"
+                                        Background="Transparent"
+                                        BorderBrush="{StaticResource ColorBrushBg0}" BorderThickness="1"
+                                        Width="{TemplateBinding Width}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Grid>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== 进度条 ===================== -->
+
+    <Style TargetType="ProgressBar">
+        <Setter Property="Height" Value="6" />
+        <Setter Property="Background" Value="{StaticResource ColorBrush6}" />
+        <Setter Property="Foreground" Value="{StaticResource BrushPrimary}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="3" ClipToBounds="True">
+                        <Grid>
+                            <Rectangle x:Name="PART_Track" />
+                            <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}"
+                                    CornerRadius="3" HorizontalAlignment="Left" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== 列表 ===================== -->
+
+    <Style x:Key="PlainListBox" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True" />
+        <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="Margin" Value="0" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <ContentPresenter />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== 分段切换（对应 PCL 的 MyRadioButton ColorType=Highlight） =====================
+         出处：Controls/MyRadioButton.xaml + .xaml.vb。胶囊 27 高、圆角 13.5；
+         常态底 ColorSemiTransparent + 蓝字；hover 底 ColorBrush7；按下底 ColorBrush6；选中底 ColorBrush3 + 白字。 -->
+
+    <Style x:Key="SegTab" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}" />
+        <Setter Property="Foreground" Value="{StaticResource ColorBrush3}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Height" Value="27" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" Background="{StaticResource ColorBrushSemiTransparent}"
+                            CornerRadius="13.5" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush7}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush6}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource ColorBrush3}" />
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushWhite}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource ColorBrushGray4}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===================== 提示 ===================== -->
+
+    <Style TargetType="ToolTip">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}" />
+        <Setter Property="Foreground" Value="{StaticResource BrushTextPrimary}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{StaticResource BrushPanelBg}" CornerRadius="6"
+                            BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" Padding="10,6">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.12" Color="#333E48" />
+                        </Border.Effect>
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

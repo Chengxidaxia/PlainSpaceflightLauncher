@@ -1,0 +1,70 @@
+<Window x:Class="PSL.Controls.PickDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="选择"
+        Width="440" SizeToContent="Height" MaxHeight="620"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        FontFamily="{StaticResource AppFont}"
+        FontSize="{StaticResource FontSizeNormal}">
+
+    <Window.Resources>
+        <Style x:Key="PickItem" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Margin="0,2" Padding="12,9">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushNavHover}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource BrushPrimaryLight}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Margin="14" Background="{StaticResource BrushPanelBg}" CornerRadius="10"
+            BorderBrush="{StaticResource BrushBorder}" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="4" Opacity="0.18" Color="#333E48" />
+        </Border.Effect>
+
+        <StackPanel Margin="22,20,22,18">
+            <TextBlock x:Name="TxtTitle" Text="请选择" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock x:Name="TxtMessage" Margin="0,8,0,0" TextWrapping="Wrap"
+                       Foreground="{StaticResource BrushTextSecondary}" LineHeight="19" />
+
+            <ListBox x:Name="List" Margin="0,14,0,0" MaxHeight="320"
+                     Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ItemContainerStyle="{StaticResource PickItem}"
+                     MouseDoubleClick="List_MouseDoubleClick">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Sub}" Margin="0,3,0,0" TextWrapping="Wrap"
+                                       Foreground="{StaticResource BrushTextTertiary}"
+                                       FontSize="{StaticResource FontSizeSmall}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                <Button Content="取消" Style="{StaticResource BtnBase}" MinWidth="82" Click="Cancel_Click" />
+                <Button Content="确定" Style="{StaticResource BtnPrimary}" MinWidth="82" Margin="10,0,0,0"
+                        Click="Ok_Click" IsDefault="True" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>

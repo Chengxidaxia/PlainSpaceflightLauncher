@@ -1,0 +1,69 @@
+<ctl:PclPage x:Class="PSL.Pages.PageSelect"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:PSL.Controls"
+             Background="Transparent">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= 左栏：游戏文件夹列表 =================
+             逐层照 PCL `Pages/PageSelectLeft.xaml`：
+               MyPageLeft{ AnimatedControl="PanList" } > AdornerDecorator > Grid(Auto / 1* / 5)
+               > MyScrollViewer{ MaxWidth=300 MinWidth=250 } > StackPanel x:Name="PanList"
+             列表内容为空，全部由 `PageSelectLeft.xaml.vb:12-136` 的 McFolderListUI() 动态生成
+             （见 PageSelect.xaml.cs 的 BuildFolders）。 -->
+        <ctl:PclPageLeft x:Name="PanLeft" Grid.Column="0" AnimatedControl="PanList">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="5" />
+                </Grid.RowDefinitions>
+                <ScrollViewer x:Name="PanBack" Grid.Row="1" MinWidth="250" MaxWidth="300"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="PanList" />
+                </ScrollViewer>
+            </Grid>
+        </ctl:PclPageLeft>
+
+        <!-- ================= 右栏：该文件夹下的版本列表 =================
+             外层结构照 PCL `Pages/PageSelectRight.xaml`：
+               Grid > { MyScrollViewer > StackPanel Margin="25,25,25,10" } + 居中空态卡 PanEmpty
+             卡片由 `PageSelectRight.xaml.vb:25-115` 的 McInstanceListUI() 动态生成
+             （见 PageSelect.xaml.cs 的 BuildVersions）。 -->
+        <ctl:PclPageRight x:Name="PanRight" Grid.Column="1" AnimatedControl="PanMain">
+            <Grid>
+                <ScrollViewer x:Name="PanBackVersions" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="PanMain" Margin="25,25,25,10" />
+                </ScrollViewer>
+
+                <!-- 空态：照 PCL `PageSelectRight.xaml:12-19` 的 PanEmpty
+                     （居中卡片、标题 19 号 ColorBrush3、2px 横线、描述、操作按钮） -->
+                <ctl:PclCard x:Name="PanEmpty" HorizontalAlignment="Center" VerticalAlignment="Center"
+                             Margin="40" Visibility="Collapsed">
+                    <StackPanel Margin="20,17">
+                        <TextBlock x:Name="LabEmptyTitle" Text="无可用版本" FontSize="19"
+                                   HorizontalAlignment="Center" Margin="0,0,0,9"
+                                   Foreground="{StaticResource ColorBrush3}" />
+                        <Rectangle Height="2" HorizontalAlignment="Stretch"
+                                   Fill="{StaticResource ColorBrush3}" />
+                        <TextBlock x:Name="LabEmptyContent" Margin="10,15,10,5" TextWrapping="Wrap"
+                                   MaxWidth="400" TextAlignment="Center"
+                                   Foreground="{StaticResource ColorBrushGray1}"
+                                   Text="这个文件夹下没有找到任何 SFS 版本。&#x0a;请点「添加版本文件夹」或「添加大版本文件夹」把已有的游戏导入进来。" />
+                        <Button x:Name="BtnEmptyAdd" Style="{StaticResource BtnPrimary}"
+                                Content="添加版本文件夹" Height="35" MinWidth="140"
+                                HorizontalAlignment="Center" Padding="13,0" Margin="0,10,0,0"
+                                Click="BtnEmptyAdd_Click" />
+                    </StackPanel>
+                </ctl:PclCard>
+            </Grid>
+        </ctl:PclPageRight>
+    </Grid>
+</ctl:PclPage>

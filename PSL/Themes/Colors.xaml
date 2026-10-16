@@ -1,0 +1,237 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--
+        PSL 色板 —— 取自 PCL 的**运行时**取值。
+
+        ⚠️ 关键：PCL 的色板不是 Application.xaml 里那几个硬编码值是最终值。
+        PCL 启动时会调用 ThemeRefresh()（Modules/ModSecret.vb:67），
+        用 MyColor.FromHSL2 按 HSL 重新生成整条色阶：
+            ColorHue = 210, ColorSat = 85, ColorLightAdjust = 0   （ModSecret.vb:64）
+            Color1 = HSL2(210, Sat*0.2, 25)   Color2 = HSL2(210, Sat, 45)
+            Color3 = HSL2(210, Sat, 55)       Color4 = HSL2(210, Sat, 65)
+            Color5 = HSL2(210, Sat, 80)       Color6 = HSL2(210, Sat, 91)
+            Color7 = HSL2(210, Sat, 95)       Color8 = HSL2(210, Sat, 97)
+            ColorBg0 = Color4*0.4 + Color5*0.4 + ColorGray4*0.2
+            ColorBg1 = MyColor(190, Color7)
+        下面每个值都由 `_verify/pcl_palette.py` 复刻该算法算出，并已用两处独立证据校验：
+          · MyHint 蓝字 #0F64B8 == Color2
+          · ColorBg1 的 alpha 前缀 BE == MyColor(190, ...)
+
+        所以以下取值为 PCL 实际渲染出来的颜色，而不是它 XAML 里的设计期兜底值。
+    -->
+
+    <!-- ===================== 主题色阶（Color1 - Color8） ===================== -->
+
+    <Color x:Key="ColorObject1">#333E48</Color>
+    <Color x:Key="ColorObject2">#0F64B8</Color>
+    <Color x:Key="ColorObject3">#127AE1</Color>
+    <Color x:Key="ColorObject4">#3C96EF</Color>
+    <Color x:Key="ColorObject5">#90C3F6</Color>
+    <Color x:Key="ColorObject6">#CDE4FB</Color>
+    <Color x:Key="ColorObject7">#E3F0FD</Color>
+    <Color x:Key="ColorObject8">#EEF6FE</Color>
+    <!-- ColorBg0 = Color4*0.4 + Color5*0.4 + ColorGray4*0.2 -->
+    <Color x:Key="ColorObjectBg0">#73ABE3</Color>
+    <!-- ColorBg1 = MyColor(190, Color7)，alpha = 190 = 0xBE -->
+    <Color x:Key="ColorObjectBg1">#BEE3F0FD</Color>
+
+    <SolidColorBrush x:Key="ColorBrush1" Color="#333E48" />
+    <SolidColorBrush x:Key="ColorBrush2" Color="#0F64B8" />
+    <SolidColorBrush x:Key="ColorBrush3" Color="#127AE1" />
+    <SolidColorBrush x:Key="ColorBrush4" Color="#3C96EF" />
+    <SolidColorBrush x:Key="ColorBrush5" Color="#90C3F6" />
+    <SolidColorBrush x:Key="ColorBrush6" Color="#CDE4FB" />
+    <SolidColorBrush x:Key="ColorBrush7" Color="#E3F0FD" />
+    <SolidColorBrush x:Key="ColorBrush8" Color="#EEF6FE" />
+    <SolidColorBrush x:Key="ColorBrushBg0" Color="#73ABE3" />
+    <SolidColorBrush x:Key="ColorBrushBg1" Color="#BEE3F0FD" />
+
+    <!-- ===================== 灰阶（ModSecret.vb:50-58 的固定值，不随主题变） ===================== -->
+
+    <Color x:Key="ColorObjectGray1">#404040</Color>
+    <Color x:Key="ColorObjectGray2">#737373</Color>
+    <Color x:Key="ColorObjectGray3">#8C8C8C</Color>
+    <Color x:Key="ColorObjectGray4">#A6A6A6</Color>
+    <Color x:Key="ColorObjectGray5">#CCCCCC</Color>
+    <Color x:Key="ColorObjectGray6">#EBEBEB</Color>
+    <Color x:Key="ColorObjectGray7">#F0F0F0</Color>
+    <Color x:Key="ColorObjectGray8">#F5F5F5</Color>
+
+    <SolidColorBrush x:Key="ColorBrushGray1" Color="#404040" />
+    <SolidColorBrush x:Key="ColorBrushGray2" Color="#737373" />
+    <SolidColorBrush x:Key="ColorBrushGray3" Color="#8C8C8C" />
+    <SolidColorBrush x:Key="ColorBrushGray4" Color="#A6A6A6" />
+    <SolidColorBrush x:Key="ColorBrushGray5" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="ColorBrushGray6" Color="#EBEBEB" />
+    <SolidColorBrush x:Key="ColorBrushGray7" Color="#F0F0F0" />
+    <SolidColorBrush x:Key="ColorBrushGray8" Color="#F5F5F5" />
+
+    <!-- ===================== 功能色（Application.xaml:58-60，不随主题变） ===================== -->
+
+    <SolidColorBrush x:Key="ColorBrushRedBack" Color="#80FBDDDD" />
+    <SolidColorBrush x:Key="ColorBrushRedLight" Color="#FF4C4C" />
+    <SolidColorBrush x:Key="ColorBrushRedDark" Color="#CE2111" />
+
+    <!-- ===================== 提示条（MyHint.xaml.vb UpdateUI 的固定 hex） ===================== -->
+
+    <SolidColorBrush x:Key="ColorBrushHintBlueBack" Color="#D9ECFF" />
+    <SolidColorBrush x:Key="ColorBrushHintBlueBorder" Color="#1172D4" />
+    <SolidColorBrush x:Key="ColorBrushHintBlueText" Color="#0F64B8" />
+    <SolidColorBrush x:Key="ColorBrushHintRedBack" Color="#FFDDDF" />
+    <SolidColorBrush x:Key="ColorBrushHintRedBorder" Color="#D82929" />
+    <SolidColorBrush x:Key="ColorBrushHintRedText" Color="#BF0B0B" />
+    <SolidColorBrush x:Key="ColorBrushHintYellowBack" Color="#FFEBD7" />
+    <SolidColorBrush x:Key="ColorBrushHintYellowBorder" Color="#F57A00" />
+    <SolidColorBrush x:Key="ColorBrushHintYellowText" Color="#D86C00" />
+
+    <!-- ===================== 白 / 透明 ===================== -->
+
+    <SolidColorBrush x:Key="ColorBrushHalfWhite" Color="#55FFFFFF" />
+    <SolidColorBrush x:Key="ColorBrushSemiWhite" Color="#BBFFFFFF" />
+    <SolidColorBrush x:Key="ColorBrushWhite" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ColorBrushTransparent" Color="Transparent" />
+    <!-- ColorSemiTransparent = MyColor(1, Color8) -->
+    <SolidColorBrush x:Key="ColorBrushSemiTransparent" Color="#01EEF6FE" />
+    <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
+
+    <!-- 标题栏导航按钮的状态底色（MyRadioButton.xaml.vb ColorState.White 里的字面量，不随主题） -->
+    <SolidColorBrush x:Key="ColorBrushTitleNavHover" Color="#32EAF2FE" />
+    <SolidColorBrush x:Key="ColorBrushTitleNavDown" Color="#78EAF2FE" />
+
+    <!-- MyIconButton Theme=Black：Fill = MyColor(160,0,0,0)（MyIconButton.xaml.vb:104） -->
+    <SolidColorBrush x:Key="ColorBrushTitleButtonClear" Color="#A0000000" />
+
+    <!-- ===================== 窗体（FormMain.xaml.vb ThemeRefreshMain） ===================== -->
+
+    <!-- 标题栏：HSL2(210, 85, 48) → (…,54) → (…,48)，offset 0 / 0.5 / 1 -->
+    <LinearGradientBrush x:Key="BrushTitleBarGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#106AC4" Offset="0" />
+        <GradientStop Color="#1277DD" Offset="0.5" />
+        <GradientStop Color="#106AC4" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- 主页面背景（UiBackgroundColorful 默认 True）：
+         HSL2(195, 68, 91) → HSL2(210, 68, 91) → HSL2(225, 68, 91)，offset -0.1 / 0.4 / 1.1 -->
+    <LinearGradientBrush x:Key="BrushPageBackground" StartPoint="0.9,0" EndPoint="0.1,1">
+        <GradientStop Color="#CAEAF5" Offset="-0.1" />
+        <GradientStop Color="#D3E5F7" Offset="0.4" />
+        <GradientStop Color="#DBE2F8" Offset="1.1" />
+    </LinearGradientBrush>
+
+    <!-- 卡片阴影：MyCard 用 MyDropShadow（ShadowRadius 3 / 圆角 5 / 闲置 ColorObject1 @0.07，
+         指向 ColorObject4 @0.4）。这里用 DropShadowEffect 近似同一观感。 -->
+    <DropShadowEffect x:Key="ShadowCard" BlurRadius="7" ShadowDepth="0" Direction="270"
+                      Opacity="0.07" Color="#333E48" />
+    <DropShadowEffect x:Key="ShadowCardHover" BlurRadius="7" ShadowDepth="0" Direction="270"
+                      Opacity="0.40" Color="#3C96EF" />
+    <DropShadowEffect x:Key="ShadowSidebar" BlurRadius="4" ShadowDepth="1" Direction="0"
+                      Opacity="0.06" Color="#333E48" />
+    <DropShadowEffect x:Key="ShadowPopup" BlurRadius="14" ShadowDepth="2"
+                      Opacity="0.20" Color="#333E48" />
+    <DropShadowEffect x:Key="ShadowWindow" BlurRadius="14" ShadowDepth="0"
+                      Opacity="0.34" Color="#333E48" />
+
+    <!-- ===================== PSL 语义别名 =====================
+         键名沿用 PSL 既有代码，取值一律指向上面的 PCL 同义项。 -->
+
+    <Color x:Key="ColorPrimaryDarkest">#333E48</Color>
+    <Color x:Key="ColorPrimaryPressed">#0F64B8</Color>
+    <Color x:Key="ColorPrimary">#127AE1</Color>
+    <Color x:Key="ColorPrimaryHover">#3C96EF</Color>
+    <Color x:Key="ColorTitleBar">#3C96EF</Color>
+    <Color x:Key="ColorPrimaryLight">#90C3F6</Color>
+    <Color x:Key="ColorPrimaryLighter">#CDE4FB</Color>
+    <Color x:Key="ColorSelectedBg">#CDE4FB</Color>
+    <Color x:Key="ColorPrimaryPale">#E3F0FD</Color>
+
+    <Color x:Key="ColorGray1">#404040</Color>
+    <Color x:Key="ColorGray2">#737373</Color>
+    <Color x:Key="ColorGray3">#8C8C8C</Color>
+    <Color x:Key="ColorGray4">#A6A6A6</Color>
+    <Color x:Key="ColorGray5">#CCCCCC</Color>
+    <Color x:Key="ColorGray6">#EBEBEB</Color>
+    <Color x:Key="ColorGray7">#F0F0F0</Color>
+    <Color x:Key="ColorGray8">#F5F5F5</Color>
+
+    <Color x:Key="ColorDanger">#FF4C4C</Color>
+    <Color x:Key="ColorDangerDark">#CE2111</Color>
+
+    <SolidColorBrush x:Key="BrushPrimary" Color="#127AE1" />
+    <SolidColorBrush x:Key="BrushPrimaryHover" Color="#3C96EF" />
+    <SolidColorBrush x:Key="BrushPrimaryPressed" Color="#0F64B8" />
+    <SolidColorBrush x:Key="BrushPrimaryLight" Color="#90C3F6" />
+    <SolidColorBrush x:Key="BrushPrimaryLighter" Color="#CDE4FB" />
+    <SolidColorBrush x:Key="BrushPrimaryPale" Color="#E3F0FD" />
+    <SolidColorBrush x:Key="BrushSelectedBg" Color="#CDE4FB" />
+    <SolidColorBrush x:Key="BrushTitleBar" Color="#3C96EF" />
+
+    <SolidColorBrush x:Key="BrushGray1" Color="#404040" />
+    <SolidColorBrush x:Key="BrushGray2" Color="#737373" />
+    <SolidColorBrush x:Key="BrushGray3" Color="#8C8C8C" />
+    <SolidColorBrush x:Key="BrushGray4" Color="#A6A6A6" />
+    <SolidColorBrush x:Key="BrushGray5" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="BrushGray6" Color="#EBEBEB" />
+    <SolidColorBrush x:Key="BrushGray7" Color="#F0F0F0" />
+    <SolidColorBrush x:Key="BrushGray8" Color="#F5F5F5" />
+
+    <SolidColorBrush x:Key="BrushWindowBg" Color="#F5F5F5" />
+    <SolidColorBrush x:Key="BrushPanelBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="BrushSidebarBg" Color="#F1FFFFFF" />
+    <SolidColorBrush x:Key="BrushCardBg" Color="#F5FFFFFF" />
+    <SolidColorBrush x:Key="BrushCardHover" Color="#E3F0FD" />
+    <SolidColorBrush x:Key="BrushCardPressed" Color="#CDE4FB" />
+    <SolidColorBrush x:Key="BrushInputBg" Color="#55FFFFFF" />
+    <SolidColorBrush x:Key="BrushNavBg" Color="Transparent" />
+    <SolidColorBrush x:Key="BrushNavHover" Color="#BEE3F0FD" />
+    <SolidColorBrush x:Key="BrushNavSelected" Color="#CDE4FB" />
+
+    <SolidColorBrush x:Key="BrushBorder" Color="#EBEBEB" />
+    <SolidColorBrush x:Key="BrushBorderStrong" Color="#CCCCCC" />
+    <SolidColorBrush x:Key="BrushBorderHover" Color="#127AE1" />
+    <SolidColorBrush x:Key="BrushBorderFocus" Color="#127AE1" />
+
+    <SolidColorBrush x:Key="BrushTextPrimary" Color="#333E48" />
+    <SolidColorBrush x:Key="BrushTextSecondary" Color="#737373" />
+    <SolidColorBrush x:Key="BrushTextTertiary" Color="#8C8C8C" />
+    <SolidColorBrush x:Key="BrushTextDisabled" Color="#A6A6A6" />
+    <SolidColorBrush x:Key="BrushTextOnPrimary" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="BrushDanger" Color="#FF4C4C" />
+    <SolidColorBrush x:Key="BrushDangerDark" Color="#CE2111" />
+    <SolidColorBrush x:Key="BrushWarning" Color="#F57A00" />
+    <SolidColorBrush x:Key="BrushSuccess" Color="#3FA34D" />
+    <SolidColorBrush x:Key="BrushDisabled" Color="#A6A6A6" />
+
+    <SolidColorBrush x:Key="BrushTitleButtonBg" Color="#01EEF6FE" />
+    <SolidColorBrush x:Key="BrushTitleButtonHover" Color="#32EAF2FE" />
+    <SolidColorBrush x:Key="BrushTitleButtonChecked" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="BrushTitleText" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="BrushTitleTextDim" Color="#DDFFFFFF" />
+
+    <SolidColorBrush x:Key="BrushOverlay" Color="#66000000" />
+
+    <!-- ===================== 字体 ===================== -->
+
+    <FontFamily x:Key="AppFont">Microsoft YaHei UI, Microsoft YaHei, Segoe UI</FontFamily>
+    <!-- 仅用于个别箭头等需要字形兜底的场合；主要图标一律使用矢量 Path -->
+    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <sys:Double x:Key="FontSizeSmall">11.5</sys:Double>
+    <sys:Double x:Key="FontSizeNormal">13</sys:Double>
+    <sys:Double x:Key="FontSizeTitle">15</sys:Double>
+    <sys:Double x:Key="FontSizeHeader">19</sys:Double>
+
+    <sys:Double x:Key="ControlHeight">30</sys:Double>
+    <sys:Double x:Key="TitleBarHeight">48</sys:Double>
+
+    <!-- ===================== 圆角（PCL 取值） ===================== -->
+
+    <CornerRadius x:Key="RadiusWindow">6</CornerRadius>
+    <CornerRadius x:Key="RadiusCard">5</CornerRadius>
+    <CornerRadius x:Key="RadiusButton">3</CornerRadius>
+    <CornerRadius x:Key="RadiusInput">3</CornerRadius>
+    <CornerRadius x:Key="RadiusPill">13.5</CornerRadius>
+
+</ResourceDictionary>
