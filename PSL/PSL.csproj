@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,6 +13,10 @@
 
     <!-- 注意：本项目按需求刻意不设置 ApplicationIcon，最终 exe 使用系统默认图标 -->
     <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+
 
     <Version>1.0.0</Version>
     <FileVersion>1.0.0.0</FileVersion>
@@ -28,10 +32,24 @@
 
   <!-- WindowsDesktop SDK 的隐式 using 不含 System.IO，这里补上 -->
   <ItemGroup>
+    <Resource Include="Assets\Chinese.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
     <Using Include="System.IO" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2957.106" />
+    <PackageReference Include="SharpCompress" Version="0.38.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- 单 exe：把托管依赖嵌进 exe（Costura.Fody） -->
+    <PackageReference Include="Fody" Version="6.8.2" PrivateAssets="all" />
+    <PackageReference Include="Costura.Fody" Version="5.7.0" PrivateAssets="all" />
   </ItemGroup>
+
+
 
 </Project>

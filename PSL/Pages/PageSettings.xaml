@@ -69,6 +69,25 @@
                                     </StackPanel>
                                 </Grid>
 
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="126" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="汉化版下载源" VerticalAlignment="Center" />
+                                    <ComboBox x:Name="CmbGithubProxy" Grid.Column="1" Width="240"
+                                              HorizontalAlignment="Left"
+                                              SelectionChanged="CmbGithubProxy_SelectionChanged" />
+                                    <Button x:Name="BtnProxyEdit" Grid.Column="2" Style="{StaticResource BtnBase}"
+                                            Content="修改前缀" MinWidth="90" Padding="13,0" Margin="8,0,0,0"
+                                            Click="BtnProxyEdit_Click" />
+                                </Grid>
+                                <TextBlock Margin="126,0,0,14" TextWrapping="Wrap"
+                                           Foreground="{StaticResource ColorBrushGray3}"
+                                           FontSize="{StaticResource FontSizeSmall}"
+                                           x:Name="TxtProxyHint" />
+
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="126" />

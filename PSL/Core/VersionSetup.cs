@@ -29,15 +29,15 @@ public static class VersionSetup
                 string t = line.Trim();
                 if (t.StartsWith('[') && t.EndsWith(']'))
                 {
-                    inSection = t[1..^1].Equals(section, StringComparison.OrdinalIgnoreCase);
+                    inSection = t.Substring(1, t.Length - 2).Equals(section, StringComparison.OrdinalIgnoreCase);
                     continue;
                 }
                 if (!inSection) continue;
 
                 int eq = t.IndexOf('=');
                 if (eq <= 0) continue;
-                if (t[..eq].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
-                    current = t[(eq + 1)..].Trim();
+                if (t.Substring(0, eq).Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
+                    current = t.Substring(eq + 1).Trim();
             }
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ public static class VersionSetup
                 string t = lines[i].Trim();
                 if (!t.StartsWith('[') || !t.EndsWith(']')) continue;
                 if (sectionStart >= 0) { sectionEnd = i; break; }
-                if (t[1..^1].Equals(section, StringComparison.OrdinalIgnoreCase)) sectionStart = i;
+                if (t.Substring(1, t.Length - 2).Equals(section, StringComparison.OrdinalIgnoreCase)) sectionStart = i;
             }
 
             bool replaced = false;
@@ -84,7 +84,7 @@ public static class VersionSetup
             for (int i = from; i < to; i++)
             {
                 int eq = lines[i].IndexOf('=');
-                if (eq <= 0 || !lines[i][..eq].Trim().Equals(key, StringComparison.OrdinalIgnoreCase)) continue;
+                if (eq <= 0 || !lines[i].Substring(0, eq).Trim().Equals(key, StringComparison.OrdinalIgnoreCase)) continue;
                 lines[i] = $"{key}={value}";
                 replaced = true;
                 break;
@@ -95,7 +95,7 @@ public static class VersionSetup
                 if (sectionStart >= 0) lines.Insert(sectionEnd, $"{key}={value}");
                 else
                 {
-                    if (lines.Count > 0 && lines[^1].Trim().Length > 0) lines.Add("");
+                    if (lines.Count > 0 && lines[lines.Count - 1].Trim().Length > 0) lines.Add("");
                     lines.Add($"[{section}]");
                     lines.Add($"{key}={value}");
                 }

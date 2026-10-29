@@ -232,7 +232,7 @@ public static class TranslationManager
 
     private static string MakeRelative(string baseDir, string fullPath)
     {
-        string rel = System.IO.Path.GetRelativePath(baseDir, fullPath);
+        string rel = global::PSL.Core.Net48Compat.GetRelativePath(baseDir, fullPath);
         return rel.Replace('/', '\\');
     }
 
@@ -249,7 +249,7 @@ public static class TranslationManager
             string trimmed = line.Trim();
             if (trimmed.StartsWith('[') && trimmed.EndsWith(']'))
             {
-                inSection = trimmed[1..^1].Equals(section, StringComparison.OrdinalIgnoreCase);
+                inSection = trimmed.Substring(1, trimmed.Length - 2).Equals(section, StringComparison.OrdinalIgnoreCase);
                 continue;
             }
 
@@ -258,8 +258,8 @@ public static class TranslationManager
             int eq = trimmed.IndexOf('=');
             if (eq <= 0) continue;
 
-            if (trimmed[..eq].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
-                current = trimmed[(eq + 1)..].Trim();
+            if (trimmed.Substring(0, eq).Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
+                current = trimmed.Substring(eq + 1).Trim();
         }
 
         return current;
@@ -331,7 +331,7 @@ public static class TranslationManager
                             break;
                         }
 
-                        if (t[1..^1].Equals(section, StringComparison.OrdinalIgnoreCase))
+                        if (t.Substring(1, t.Length - 2).Equals(section, StringComparison.OrdinalIgnoreCase))
                             sectionStart = i;
                     }
                 }
@@ -348,7 +348,7 @@ public static class TranslationManager
                     {
                         int eq = Lines[i].IndexOf('=');
                         if (eq <= 0) continue;
-                        if (!Lines[i][..eq].Trim().Equals(key, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!Lines[i].Substring(0, eq).Trim().Equals(key, StringComparison.OrdinalIgnoreCase)) continue;
 
                         Lines[i] = line;
                         replaced = true;
@@ -363,7 +363,7 @@ public static class TranslationManager
                     }
                     else
                     {
-                        if (Lines.Count > 0 && !string.IsNullOrWhiteSpace(Lines[^1])) Lines.Add("");
+                        if (Lines.Count > 0 && !string.IsNullOrWhiteSpace(Lines[Lines.Count - 1])) Lines.Add("");
                         Lines.Add($"[{section}]");
                         Lines.Add(line);
                     }

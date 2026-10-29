@@ -1,0 +1,4 @@
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <!-- 把托管依赖（SharpCompress、System.Text.Json、WebView2 托管 dll 等）嵌进 exe -->
+  <Costura IncludeDebugSymbols="false" DisableCompression="false" />
+</Weavers>

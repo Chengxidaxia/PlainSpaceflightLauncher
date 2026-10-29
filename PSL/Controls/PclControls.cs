@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -1056,7 +1057,7 @@ public class PclLocalItem : Grid
             FontSize = 12,
             Foreground = (SolidColorBrush)FindResource("ColorBrushGray4"),
             VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 3, 1),
+            Margin = new Thickness(0, 0, 8, 1),
             TextTrimming = TextTrimming.CharacterEllipsis,
             IsHitTestVisible = false
         };
@@ -1294,7 +1295,7 @@ public class PclResourceItem : Grid
             FontSize = 12,
             Foreground = (SolidColorBrush)FindResource("ColorBrushGray3"),
             VerticalAlignment = VerticalAlignment.Bottom,
-            Margin = new Thickness(0, 0, 3, 1),
+            Margin = new Thickness(0, 0, 8, 1),
             TextTrimming = TextTrimming.CharacterEllipsis,
             IsHitTestVisible = false
         };
@@ -1312,10 +1313,10 @@ public class PclResourceItem : Grid
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "ItemVersion" });  // 1 版本
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0.7, GridUnitType.Star) });           // 2
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });                                   // 3 下载图标
-        bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(55) });                                // 4 下载量
+        bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "ItemSize" });    // 4 大小
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });             // 5
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });                                   // 6 时间图标
-        bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(57), SharedSizeGroup = "ItemTime" }); // 7 时间
+        bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "ItemTime" });     // 7 时间
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });             // 8
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });                                   // 9 来源图标
         bottom.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto, SharedSizeGroup = "ItemSource" });   // 10 来源
@@ -1383,8 +1384,8 @@ public class PclResourceItem : Grid
             FontSize = 12,
             Foreground = (SolidColorBrush)FindResource("ColorBrushGray4"),
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(5, 0, 2, 0),
-            TextTrimming = TextTrimming.WordEllipsis,
+            Margin = new Thickness(5, 0, 10, 0),
+            TextTrimming = TextTrimming.None,
             IsHitTestVisible = false
         };
         SetColumn(text, column);
@@ -1495,4 +1496,239 @@ public class PclResourceItem : Grid
 
     /// <summary>点击事件。</summary>
     public event EventHandler? Click;
+}
+
+/// <summary>
+/// 复选框（逐项照 PCL <c>Controls/MyCheckBox.xaml</c> + <c>MyCheckBox.xaml.vb</c> 的真实参数与状态机）。
+/// <para>
+/// 容器 <c>MinWidth=20 MinHeight=20 Background=ColorBrushSemiTransparent</c>；
+/// 文字 <c>FontSize=13 Margin=26,0,0,0 Foreground=ColorBrush1</c>；
+/// 方框 18×18、<c>BorderThickness=1.1</c>、<c>CornerRadius=3</c>、<c>Margin=1,0,0,0</c>、
+/// 底色 <c>ColorBrushHalfWhite</c>，未选中边框 <c>ColorBrush1</c>、选中 <c>ColorBrush2</c>、
+/// 指向 <c>ColorBrush3</c>、禁用 <c>ColorBrushGray5</c>；
+/// 勾 12×12 <c>Margin=4,0,0,0</c>，<c>Fill</c> 绑定方框边框色，<c>ScaleTransform CenterX/Y=6</c>。
+/// 动画：勾选 150ms（方框先胀到 12 再回 18，勾 0→1 用 OutBack、延迟 105ms）；
+/// 指向文字/边框变 ColorBrush3 用 100ms，离开 200ms；按下底色变 ColorBrushBg1 100ms、方框胀到 16.5。
+/// </para>
+/// </summary>
+public class PclCheckBox : Grid
+{
+    private const int TimeCheck = 150;
+
+    private readonly TextBlock _text;
+    private readonly Border _box;
+    private readonly ShapePath _check;
+    private readonly ScaleTransform _checkScale;
+
+    private bool _checked;
+    private bool _mouseDowned;
+    private bool _allowMouseDown = true;
+
+    public PclCheckBox()
+    {
+        // MyCheckBox.xaml:6
+        MinWidth = 20;
+        MinHeight = 20;
+        Background = (SolidColorBrush)FindResource("ColorBrushSemiTransparent");
+        Focusable = true;
+        FocusVisualStyle = null;
+        UseLayoutRounding = false;
+        SnapsToDevicePixels = false;
+        Cursor = Cursors.Hand;
+
+        // MyCheckBox.xaml:7
+        _text = new TextBlock
+        {
+            FontSize = 13,
+            Margin = new Thickness(26, 0, 0, 0),
+            Foreground = (SolidColorBrush)FindResource("ColorBrush1"),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false
+        };
+        Children.Add(_text);
+
+        // MyCheckBox.xaml:8
+        _box = new Border
+        {
+            BorderThickness = new Thickness(1.1),
+            Width = 18,
+            Height = 18,
+            CornerRadius = new CornerRadius(3),
+            Margin = new Thickness(1, 0, 0, 0),
+            BorderBrush = (SolidColorBrush)FindResource("ColorBrush1"),
+            Background = (SolidColorBrush)FindResource("ColorBrushHalfWhite"),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false,
+            RenderTransformOrigin = new Point(0.5, 0.5),
+            RenderTransform = new ScaleTransform(1, 1)
+        };
+        Children.Add(_box);
+
+        // MyCheckBox.xaml:9-13
+        _checkScale = new ScaleTransform(0, 0);
+        _check = new ShapePath
+        {
+            Data = Geometry.Parse("M0,6L1.5,4.5 4.5,7.5 10.5,1.5 12,3 4.5,10.5 0,6z"),
+            Width = 12,
+            Height = 12,
+            Stretch = Stretch.None,
+            Margin = new Thickness(4, 0, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+            IsHitTestVisible = false,
+            RenderTransform = _checkScale
+        };
+        _check.SetBinding(Shape.FillProperty,
+            new Binding(nameof(Border.BorderBrush)) { Source = _box });
+        Children.Add(_check);
+
+        MouseLeftButtonUp += (_, _) => OnMouseUp();
+        MouseLeftButtonDown += (_, e) =>
+        {
+            OnMouseDown();
+            e.Handled = true;
+        };
+        MouseEnter += (_, _) => AnimateColors("ColorBrush3", 100);
+        MouseLeave += (_, _) =>
+        {
+            OnMouseLeave();
+            AnimateColors(IsEnabled ? (_checked ? "ColorBrush2" : "ColorBrush1") : "ColorBrushGray5", 200);
+        };
+        IsEnabledChanged += (_, _) =>
+        {
+            if (!IsEnabled) AnimateColors("ColorBrushGray5", 200);
+            else AnimateColors(_checked ? "ColorBrush2" : "ColorBrush1", 200);
+            _text.Foreground = (SolidColorBrush)FindResource(IsEnabled ? "ColorBrush1" : "ColorBrushGray5");
+        };
+
+        SyncVisual(animate: false);
+    }
+
+    /// <summary>文字。</summary>
+    public string Text
+    {
+        get => _text.Text;
+        set => _text.Text = value ?? string.Empty;
+    }
+
+    /// <summary>勾选状态（程序设置不触发 <see cref="Changed"/>）。</summary>
+    public bool Checked
+    {
+        get => _checked;
+        set
+        {
+            if (_checked == value) return;
+            _checked = value;
+            SyncVisual(animate: IsLoaded);
+        }
+    }
+
+    /// <summary>用户点击导致勾选变化。</summary>
+    public event EventHandler<bool>? Changed;
+
+    private void OnMouseUp()
+    {
+        if (!_mouseDowned) return;
+        _mouseDowned = false;
+
+        _checked = !_checked;
+        SyncVisual(animate: true);
+        AnimateBackground("ColorBrushHalfWhite", 100);
+        Changed?.Invoke(this, _checked);
+    }
+
+    private void OnMouseDown()
+    {
+        if (!_allowMouseDown) return;
+        _mouseDowned = true;
+        Focus();
+        AnimateBackground("ColorBrushBg1", 100);
+        AnimateBoxScale(16.5, 1000, 0, 4);
+        if (_checked) AnimateCheck(0.9, 1000, 0, 4);
+    }
+
+    private void OnMouseLeave()
+    {
+        if (!_mouseDowned) return;
+        _mouseDowned = false;
+        AnimateBackground("ColorBrushHalfWhite", 100);
+        AnimateBoxScale(18, 400, 0, 4);
+        if (_checked) AnimateCheck(1, 500, 0, 4);
+    }
+
+    private void SyncVisual(bool animate)
+    {
+        if (!animate)
+        {
+            _checkScale.ScaleX = _checkScale.ScaleY = _checked ? 1 : 0;
+            _box.BorderBrush = (SolidColorBrush)FindResource(
+                !IsEnabled ? "ColorBrushGray5" : (_checked ? "ColorBrush2" : "ColorBrush1"));
+            return;
+        }
+
+        _allowMouseDown = false;
+        // 方框先胀到 12 宽度（即 +12-18=-6），再回 18；勾 0→1 用 OutBack 并延迟 0.7×150ms
+        AnimateBoxScale(12, TimeCheck, 0, 3);
+        AnimateCheck(_checked ? 1 : 0, TimeCheck * 2, TimeCheck * 0.7, 2);
+        AnimateBoxScale(18, TimeCheck * 2, TimeCheck * 0.7, 3);
+        AnimateColors(IsEnabled ? (_checked ? "ColorBrush2" : "ColorBrush1") : "ColorBrushGray5", TimeCheck);
+
+        var timer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(TimeCheck * 2)
+        };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            _allowMouseDown = true;
+        };
+        timer.Start();
+    }
+
+    private void AnimateBoxScale(double size, int ms, double delayMs = 0, int power = 3)
+    {
+        var scale = (ScaleTransform)(_box.RenderTransform ??= new ScaleTransform(1, 1));
+        double from = scale.ScaleX;
+        double to = size / 18.0;
+        var anim = new DoubleAnimation(from, to, TimeSpan.FromMilliseconds(ms))
+        {
+            EasingFunction = new PclFluentEase { Power = power },
+            BeginTime = TimeSpan.FromMilliseconds(delayMs)
+        };
+        scale.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
+        scale.BeginAnimation(ScaleTransform.ScaleYProperty, anim.Clone());
+    }
+
+    private void AnimateCheck(double to, int ms, double delayMs, int power)
+    {
+        var anim = new DoubleAnimation(_checkScale.ScaleX, to, TimeSpan.FromMilliseconds(ms))
+        {
+            EasingFunction = new PclBackEase { Power = power },
+            BeginTime = TimeSpan.FromMilliseconds(delayMs)
+        };
+        _checkScale.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
+        _checkScale.BeginAnimation(ScaleTransform.ScaleYProperty, anim.Clone());
+    }
+
+    private void AnimateColors(string key, int ms)
+    {
+        var target = ((SolidColorBrush)FindResource(key)).Color;
+        var border = new ColorAnimation(target, TimeSpan.FromMilliseconds(ms));
+        _box.BorderBrush.BeginAnimation(SolidColorBrush.ColorProperty, border);
+
+        var text = new ColorAnimation(
+            ((SolidColorBrush)FindResource(key)).Color,
+            TimeSpan.FromMilliseconds(ms));
+        _text.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, text);
+    }
+
+    private void AnimateBackground(string key, int ms)
+    {
+        var anim = new ColorAnimation(
+            ((SolidColorBrush)FindResource(key)).Color,
+            TimeSpan.FromMilliseconds(ms));
+        _box.Background.BeginAnimation(SolidColorBrush.ColorProperty, anim);
+    }
 }

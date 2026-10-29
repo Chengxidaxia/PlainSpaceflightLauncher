@@ -64,8 +64,7 @@ public partial class PageInstance : PclPage, IPageRefresh
         try
         {
             bool localOn = current is not null && VersionSetup.ReadBool(current, "Localization", "Enabled");
-            RadioLocalOn.IsChecked = localOn;
-            RadioLocalOff.IsChecked = !localOn;
+            CheckLocalization.Checked = localOn;
             RadioLaunchDirect.IsChecked = !PslConfig.Current.LaunchViaSteam;
             RadioLaunchSteam.IsChecked = PslConfig.Current.LaunchViaSteam;
             RadioAdminOff.IsChecked = !PslConfig.Current.LaunchAsAdmin;
@@ -448,7 +447,7 @@ public partial class PageInstance : PclPage, IPageRefresh
 
     // ==================== 设置页开关 ====================
 
-    private void RadioLocal_Checked(object sender, RoutedEventArgs e)
+    private void CheckLocalization_Changed(object? sender, bool on)
     {
         if (_syncingSwitches) return;
 
@@ -460,7 +459,6 @@ public partial class PageInstance : PclPage, IPageRefresh
         }
 
         // 汉化版功能是**按版本**存的（版本目录\PSL\Setup.ini）
-        bool on = ReferenceEquals(sender, RadioLocalOn);
         VersionSetup.Write(version, "Localization", "Enabled", on ? "true" : "false");
         ApplySection();
         RefreshContent();

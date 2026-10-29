@@ -150,15 +150,12 @@
 
                                 <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left"
                                            Text="汉化版功能" Margin="0,0,25,0" />
-                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal"
-                                            VerticalAlignment="Center">
-                                    <RadioButton Style="{StaticResource SegTab}" Content="开启"
-                                                 x:Name="RadioLocalOn" GroupName="Localization"
-                                                 Checked="RadioLocal_Checked" />
-                                    <RadioButton Style="{StaticResource SegTab}" Content="关闭"
-                                                 x:Name="RadioLocalOff" GroupName="Localization"
-                                                 Margin="6,0,0,0" Checked="RadioLocal_Checked" />
-                                </StackPanel>
+                                <!-- 复选框用 PclCheckBox（逐项照 PCL Controls/MyCheckBox.xaml：
+                                     18×18 圆角 3 方框 + 13px 文字左距 26 + 勾选 150ms 回弹动画） -->
+                                <ctl:PclCheckBox Grid.Row="0" Grid.Column="1" x:Name="CheckLocalization"
+                                                 VerticalAlignment="Center"
+                                                 Text="为本版本启用汉化版功能（字体 / 语言包）"
+                                                 Changed="CheckLocalization_Changed" />
 
                                 <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"
                                            Text="启动方式" Margin="0,0,25,0" />

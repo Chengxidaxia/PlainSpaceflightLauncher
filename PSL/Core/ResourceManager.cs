@@ -130,7 +130,7 @@ public static class ResourceManager
             list.Add(new ResourceItem
             {
                 Name = Path.GetFileName(file) is var n && n.EndsWith(DisabledSuffix, StringComparison.OrdinalIgnoreCase)
-                    ? n[..^DisabledSuffix.Length]
+                    ? n.Substring(0, n.Length - DisabledSuffix.Length)
                     : n,
                 Path = file,
                 IsDirectory = false,
@@ -166,7 +166,7 @@ public static class ResourceManager
             var info = new FileInfo(file);
             list.Add(new ResourceItem
             {
-                Name = enabled ? name : name[..^DisabledSuffix.Length],
+                Name = enabled ? name : name.Substring(0, name.Length - DisabledSuffix.Length),
                 Path = file,
                 IsDirectory = Directory.Exists(file),
                 Enabled = enabled,
@@ -195,7 +195,7 @@ public static class ResourceManager
         {
             string name = Path.GetFileName(dir);
             bool enabled = !name.EndsWith(DisabledSuffix, StringComparison.OrdinalIgnoreCase);
-            string display = enabled ? name : name[..^DisabledSuffix.Length];
+            string display = enabled ? name : name.Substring(0, name.Length - DisabledSuffix.Length);
 
             string bpFile = Path.Combine(dir, "Blueprint.txt");
             var info = new DirectoryInfo(dir);
@@ -227,7 +227,7 @@ public static class ResourceManager
             var info = new DirectoryInfo(dir);
             list.Add(new ResourceItem
             {
-                Name = enabled ? name : name[..^DisabledSuffix.Length],
+                Name = enabled ? name : name.Substring(0, name.Length - DisabledSuffix.Length),
                 Path = dir,
                 IsDirectory = true,
                 Enabled = enabled,
@@ -245,12 +245,12 @@ public static class ResourceManager
 
             string name = Path.GetFileName(file);
             bool enabled = !name.EndsWith(DisabledSuffix, StringComparison.OrdinalIgnoreCase);
-            if (Path.GetExtension(enabled ? name : name[..^DisabledSuffix.Length]).Length == 0) continue;
+            if (Path.GetExtension(enabled ? name : name.Substring(0, name.Length - DisabledSuffix.Length)).Length == 0) continue;
 
             var info = new FileInfo(file);
             list.Add(new ResourceItem
             {
-                Name = enabled ? name : name[..^DisabledSuffix.Length],
+                Name = enabled ? name : name.Substring(0, name.Length - DisabledSuffix.Length),
                 Path = file,
                 IsDirectory = false,
                 Enabled = enabled,
@@ -514,7 +514,7 @@ public static class ResourceManager
 
             string dst = enabled
                 ? (src.EndsWith(DisabledSuffix, StringComparison.OrdinalIgnoreCase)
-                    ? src[..^DisabledSuffix.Length]
+                    ? src.Substring(0, src.Length - DisabledSuffix.Length)
                     : src)
                 : src + DisabledSuffix;
 
@@ -524,7 +524,8 @@ public static class ResourceManager
             }
             else
             {
-                File.Move(src, dst, true);
+                if (File.Exists(dst)) File.Delete(dst);
+                File.Move(src, dst);
             }
 
             item.Path = dst;
@@ -660,7 +661,7 @@ public static class ResourceManager
             if (!Directory.Exists(candidate) && !File.Exists(candidate)) return candidate;
         }
 
-        return path + " (" + Guid.NewGuid().ToString("N")[..6] + ")";
+        return path + " (" + Guid.NewGuid().ToString("N").Substring(0, 6) + ")";
     }
 
     private static IEnumerable<string> SafeDirs(string root)
@@ -724,13 +725,13 @@ public static class ResourceManager
         Directory.CreateDirectory(target);
         foreach (string dir in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
         {
-            string rel = Path.GetRelativePath(source, dir);
+            string rel = Net48Compat.GetRelativePath(source, dir);
             Directory.CreateDirectory(Path.Combine(target, rel));
         }
 
         foreach (string file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
         {
-            string rel = Path.GetRelativePath(source, file);
+            string rel = Net48Compat.GetRelativePath(source, file);
             string dest = Path.Combine(target, rel);
             Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
             File.Copy(file, dest, true);

@@ -57,6 +57,12 @@ public sealed class PslConfig
     /// <summary>下载页使用的数据源索引（对应 <see cref="ModSource.Sites"/>）。</summary>
     public int ModSourceIndex { get; set; }
 
+    /// <summary>GitHub 下载源索引（对应 <see cref="GithubProxy.Options"/>），默认 0 = gh-proxy.com。</summary>
+    public int GithubProxyIndex { get; set; }
+
+    /// <summary>自定义下载源前缀（与 gh-proxy.com 用法一致：前缀 + 完整 GitHub 链接）。</summary>
+    public string GithubProxyCustom { get; set; } = "";
+
     // ---------- 个性化（对应 PCL 的 UiLauncher* 系列设置） ----------
 
     /// <summary>主题预设索引（-1 = 自定义色相/饱和度）。</summary>
@@ -115,7 +121,9 @@ public sealed class PslConfig
                 {
                     if (string.IsNullOrWhiteSpace(cfg.SfsDirectory)) cfg.SfsDirectory = Paths.DefaultSfsDir;
                     if (cfg.DownloadThreads is < 1 or > 64) cfg.DownloadThreads = 8;
-                    cfg.ModSourceIndex = Math.Clamp(cfg.ModSourceIndex, 0, ModSource.Sites.Length - 1);
+                    cfg.ModSourceIndex = Net48Math.Clamp(cfg.ModSourceIndex, 0, ModSource.Sites.Length - 1);
+                    cfg.GithubProxyIndex = Net48Math.Clamp(cfg.GithubProxyIndex, 0, GithubProxy.Options.Length - 1);
+                    cfg.GithubProxyCustom = (cfg.GithubProxyCustom ?? "").Trim();
                     cfg.ExtraFolders = (cfg.ExtraFolders ?? new List<FolderEntry>())
                         .Where(e => e is not null && !string.IsNullOrWhiteSpace(e.Path))
                         .GroupBy(e => GameFolder.Normalize(e.Path), StringComparer.OrdinalIgnoreCase)

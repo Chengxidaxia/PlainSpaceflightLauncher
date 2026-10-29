@@ -150,7 +150,7 @@ public partial class MainWindow : Window
     /// PCL 的 <c>InstanceSelect</c> / <c>InstanceSetup</c> 枚举注释都写着「这是一个副页面」，
     /// 它们不在标题栏导航里，只能从主页左栏的「版本选择」/「版本设置」按钮进入。
     /// </summary>
-    private static readonly HashSet<string> SubPages = new(StringComparer.Ordinal) { "select", "instance", "detail" };
+    private static readonly HashSet<string> SubPages = new(StringComparer.Ordinal) { "select", "instance", "detail", "chinese" };
 
     /// <summary>进入副页面之前所在的主页面，点返回时回到这里（对应 PCL 的 PageStack）。</summary>
     private string _lastMainKey = "home";
@@ -164,6 +164,7 @@ public partial class MainWindow : Window
         "version" or "instance" => "instance",
         "select" => "select",
         "detail" => "detail",
+        "chinese" => "chinese",
         "download" => "download",
         "friendsite" => "friendsite",
         "settings" => "settings",
@@ -177,6 +178,7 @@ public partial class MainWindow : Window
         "friendsite" => new PageFriendSite(),
         "select" => new PageSelect(),
         "detail" => new PageDownloadDetail(),
+        "chinese" => new PageChineseInstall(),
         "instance" => new PageInstance(),
         "settings" => new PageSettings(),
         "help" => new PageHelp(),
@@ -188,6 +190,7 @@ public partial class MainWindow : Window
     {
         "select" => "版本选择",
         "detail" => PageDownload.DownloadRowTitle(),
+        "chinese" => PageChineseInstall.Target is { } rel ? "安装汉化版 - " + rel.DisplayName : "安装汉化版",
         "instance" => "版本设置" + (GameLibrary.Current is { } v ? " - " + v.DisplayName : ""),
         _ => ""
     };
@@ -375,7 +378,7 @@ public partial class MainWindow : Window
         if (cfg.LogoType == 2) TitleLogoText.Text = string.IsNullOrWhiteSpace(cfg.LogoText) ? "PSL" : cfg.LogoText;
 
         // 背景图片
-        double opacity = Math.Clamp(cfg.BackgroundOpacity / 1000.0, 0, 1);
+        double opacity = Net48Math.Clamp(cfg.BackgroundOpacity / 1000.0, 0, 1);
         if (opacity <= 0.01)
         {
             BackgroundHost.Visibility = Visibility.Collapsed;

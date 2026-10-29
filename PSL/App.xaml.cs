@@ -29,17 +29,17 @@ public partial class App : Application
         Log.Info($"版本 {typeof(App).Assembly.GetName().Version}，程序目录 {Paths.AppDir}");
 
         string? pageArg = e.Args.FirstOrDefault(a => a.StartsWith("--page=", StringComparison.OrdinalIgnoreCase));
-        StartupPage = pageArg is null ? null : pageArg[7..];
+        StartupPage = pageArg is null ? null : pageArg.Substring(7);
 
         string? navArg = e.Args.FirstOrDefault(a => a.StartsWith("--nav=", StringComparison.OrdinalIgnoreCase));
         if (navArg is not null)
         {
-            NavSequence = navArg[6..]
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            NavSequence = navArg.Substring(6)
+                .Split(',').Select(x => x.Trim()).Where(x => x.Length > 0).ToArray();
         }
 
         string? tabArg = e.Args.FirstOrDefault(a => a.StartsWith("--tab=", StringComparison.OrdinalIgnoreCase));
-        StartupDownloadTab = tabArg is null ? null : tabArg[6..];
+        StartupDownloadTab = tabArg is null ? null : tabArg.Substring(6);
 
         if (!string.IsNullOrWhiteSpace(StartupPage))
             Log.Info($"启动页参数：{StartupPage}");

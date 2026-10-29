@@ -1,0 +1,88 @@
+<ctl:PclPage x:Class="PSL.Pages.PageChineseInstall"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ctl="clr-namespace:PSL.Controls"
+             Background="Transparent">
+    <!-- 照 PCL `Pages/PageDownload/PageDownloadInstall.xaml` 的 PanSelect：
+         StackPanel Margin="0,0,0,45" > MyCard Height=62（
+           返回图标按钮 26×26 "Margin 13" / Logo "Margin 52" / 名称输入框 "Margin 93,0,16,0"
+           Padding="-1,0" MinHeight=30 FontSize=15 MaxLength=70 HasBackground=False）
+         + 底部居中「开始下载」按钮。
+         本项目删去加载器（Forge/Fabric…）那一整排卡片，保留取名与下载。 -->
+    <ctl:PclPageRight x:Name="PanRight" AnimatedControl="PanMain">
+        <Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel x:Name="PanMain" Margin="25,10,25,45">
+
+                    <ctl:PclCard Margin="0,15,0,15" Height="62">
+                        <Grid>
+                            <Button Style="{StaticResource BtnIcon}" HorizontalAlignment="Left" Margin="8,0,0,0"
+                                    ToolTip="返回" Click="BtnBack_Click">
+                                <Path Data="{StaticResource IconBack}" Stretch="Uniform" Width="14" Height="14"
+                                      Fill="{StaticResource ColorBrush1}" />
+                            </Button>
+                            <Border Margin="52,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    Width="38" Height="38" CornerRadius="6">
+                                <Image x:Name="ImgLogo" Width="34" Height="34" Stretch="Uniform" />
+                            </Border>
+                            <!-- 逐字照 PCL PageDownloadInstall.xaml:24 的命名框参数：
+                                 Margin="93,0,16,0" Padding="-1,0" MinHeight="30" FontSize="15"
+                                 MaxLength="70" HasBackground="False"（= 无边框无底色） -->
+                            <TextBox x:Name="TxtName" Margin="93,0,16,0" MinHeight="30" FontSize="15"
+                                     MaxLength="70" VerticalAlignment="Center" Padding="-1,0"
+                                     Background="Transparent" BorderThickness="0"
+                                     VerticalContentAlignment="Center" />
+                        </Grid>
+                    </ctl:PclCard>
+
+                    <ctl:PclHint x:Name="HintInfo" Theme="Blue" Margin="0,0,0,15">
+                        <TextBlock x:Name="TxtHint" TextWrapping="Wrap" LineHeight="19"
+                                   Foreground="{StaticResource ColorBrushGray1}"
+                                   Text="安装位置：游戏库根目录下的同名文件夹。" />
+                    </ctl:PclHint>
+
+                    <ctl:PclCard Margin="0,0,0,15" Title="版本信息">
+                        <StackPanel Margin="25,40,25,18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="1*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="9" />
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="9" />
+                                    <RowDefinition Height="28" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="版本" VerticalAlignment="Center" Margin="0,0,25,0" />
+                                <TextBlock x:Name="TxtVersion" Grid.Column="1" VerticalAlignment="Center"
+                                           Foreground="{StaticResource ColorBrushGray2}" />
+
+                                <TextBlock Grid.Row="2" Text="安装包大小" VerticalAlignment="Center" Margin="0,0,25,0" />
+                                <TextBlock x:Name="TxtSize" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center"
+                                           Foreground="{StaticResource ColorBrushGray2}" />
+
+                                <TextBlock Grid.Row="4" Text="发布时间" VerticalAlignment="Center" Margin="0,0,25,0" />
+                                <TextBlock x:Name="TxtDate" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center"
+                                           Foreground="{StaticResource ColorBrushGray2}" />
+                            </Grid>
+                        </StackPanel>
+                    </ctl:PclCard>
+
+                    <ctl:PclCard x:Name="CardNote" Margin="0,0,0,15" Title="更新说明">
+                        <StackPanel Margin="25,40,25,18">
+                            <TextBlock x:Name="TxtNote" TextWrapping="Wrap" LineHeight="20"
+                                       Foreground="{StaticResource ColorBrushGray1}" />
+                        </StackPanel>
+                    </ctl:PclCard>
+
+                    <Button x:Name="BtnStart" Style="{StaticResource BtnPrimary}" Content="开始下载"
+                            Height="36" MinWidth="180" HorizontalAlignment="Center" Margin="0,10,0,0"
+                            Click="BtnStart_Click" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </ctl:PclPageRight>
+</ctl:PclPage>

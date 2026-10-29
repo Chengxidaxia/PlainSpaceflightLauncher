@@ -21,7 +21,7 @@ public static class WebImageCache
 
     private static string CachePath(string url)
     {
-        string hash = Convert.ToHexString(SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(url)));
+        string hash = Net48Compat.ToHexString(Net48Compat.Sha1(System.Text.Encoding.UTF8.GetBytes(url)));
         return Path.Combine(Paths.CacheDir, "WebCache", hash + Path.GetExtension(new Uri(url).AbsolutePath));
     }
 
@@ -46,7 +46,7 @@ public static class WebImageCache
         {
             byte[] data = await Client.GetByteArrayAsync(url).ConfigureAwait(false);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await File.WriteAllBytesAsync(path, data).ConfigureAwait(false);
+            await Net48Compat.WriteAllBytesAsync(path, data).ConfigureAwait(false);
             return Load(path);
         }
         catch (Exception ex)

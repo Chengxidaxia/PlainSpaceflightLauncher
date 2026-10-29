@@ -14,7 +14,11 @@ public partial class PageHome : PclPage, IPageRefresh
     public PageHome()
     {
         InitializeComponent();
-        Loaded += (_, _) => Refresh();
+        Loaded += (_, _) =>
+        {
+            Refresh();
+            LoadAnnouncement();
+        };
     }
 
     public void OnPageEnter() => Refresh();
@@ -147,14 +151,10 @@ public partial class PageHome : PclPage, IPageRefresh
 
     private void BtnAddVersion_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）",
-            Multiselect = false
-        };
-        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）");
+        if (picked is null) return;
 
-        string folder = dialog.FolderName;
+        string folder = picked;
         if (!VersionManager.Validate(folder, out string error))
         {
             MessageBox.Show(error, "无法添加这个文件夹", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -199,5 +199,111 @@ public partial class PageHome : PclPage, IPageRefresh
         {
             Mouse.OverrideCursor = null;
         }
+    }
+
+    // ==================== 公告 / 自动检查更新 ====================
+
+    private bool _announceLoading;
+    private string? _latestChineseVersion;
+
+    /// <summary>拉仓库根目录的 new.html 渲染成公告，然后顺带检查汉化版更新。</summary>
+    private async void LoadAnnouncement()
+    {
+        if (_announceLoading) return;
+        _announceLoading = true;
+
+        try
+        {
+            string? html = await ChineseRepo.LoadAnnouncementAsync();
+            PanAnnounce.Children.Clear();
+
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                TxtAnnounceEmpty.Text = "暂时读不到公告（网络不通，或仓库里没有 new.html）。";
+                TxtAnnounceEmpty.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                TxtAnnounceEmpty.Visibility = Visibility.Collapsed;
+                foreach ((int level, string text) in ChineseRepo.ParseAnnouncement(html))
+                {
+                    var block = new TextBlock
+                    {
+                        Text = text,
+                        TextWrapping = TextWrapping.Wrap,
+                        LineHeight = level > 0 ? 24 : 20,
+                        Margin = new Thickness(0, level switch { 1 => 0, 2 => 14, 3 => 10, _ => 3 },
+                                               0, level > 0 ? 4 : 0),
+                        FontSize = level switch { 1 => 19, 2 => 15, 3 => 13.5, _ => 12.5 },
+                        FontWeight = level > 0 ? FontWeights.Bold : FontWeights.Normal,
+                        Foreground = level > 0
+                            ? (System.Windows.Media.Brush)FindResource("ColorBrush1")
+                            : (System.Windows.Media.Brush)FindResource("ColorBrushGray1")
+                    };
+                    PanAnnounce.Children.Add(block);
+                }
+
+                if (PanAnnounce.Children.Count == 0)
+                {
+                    TxtAnnounceEmpty.Text = "公告为空。";
+                    TxtAnnounceEmpty.Visibility = Visibility.Visible;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("加载公告失败", ex);
+            TxtAnnounceEmpty.Text = "读取公告失败：" + ex.Message;
+            TxtAnnounceEmpty.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            _announceLoading = false;
+        }
+
+        await CheckUpdateAsync();
+    }
+
+    /// <summary>
+    /// 当前版本启用了汉化版功能时，读本机 SLV.txt 与仓库 version.html 比对。
+    /// </summary>
+    private async Task CheckUpdateAsync()
+    {
+        HintUpdate.Visibility = Visibility.Collapsed;
+
+        GameVersion? version = GameLibrary.Current;
+        if (version is null) return;
+        if (!VersionSetup.ReadBool(version, "Localization", "Enabled")) return;
+
+        string? localRaw = ChineseRepo.ReadLocalVersion(version);
+        if (string.IsNullOrWhiteSpace(localRaw)) return;
+
+        try
+        {
+            string? remoteRaw = await ChineseRepo.LoadLatestVersionAsync();
+            string remote = ChineseRepo.NormalizeVersion(remoteRaw);
+            if (remote.Length == 0) return;
+
+            _latestChineseVersion = remote;
+            string local = ChineseRepo.NormalizeVersion(localRaw);
+            if (string.Equals(local, remote, StringComparison.OrdinalIgnoreCase)) return;
+
+            TxtUpdate.Text = $"检测到汉化版更新：「{version.DisplayName}」当前是 {local}，仓库最新是 {remote}。";
+            HintUpdate.Visibility = Visibility.Visible;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"检查汉化版更新失败：{ex.Message}");
+        }
+    }
+
+    private void BtnUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        MainWindow.Instance?.Navigate("download");
+        if (MainWindow.Instance?.PageHost.Content is PageDownload page) page.ShowChinese();
+        if (MainWindow.Instance?.PageHost.Content is PageDownload)
+            MainWindow.Toast(_latestChineseVersion is null
+                ? "已打开汉化版下载列表。"
+                : $"已打开汉化版下载列表，最新版本 {_latestChineseVersion}。");
     }
 }

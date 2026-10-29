@@ -90,7 +90,7 @@ public partial class TaskDialog : Window
             else
             {
                 Bar.IsIndeterminate = false;
-                Bar.Value = Math.Clamp(percent, 0, 100);
+                Bar.Value = Net48Math.Clamp(percent, 0, 100);
                 TxtPercent.Text = $"{percent:F1}%";
             }
         });

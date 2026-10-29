@@ -133,7 +133,7 @@ public static class ModSource
 
     /// <summary>当前选中的数据源。</summary>
     public static ModSourceSite Current
-        => Sites[Math.Clamp(PslConfig.Current.ModSourceIndex, 0, Sites.Length - 1)];
+        => Sites[Net48Math.Clamp(PslConfig.Current.ModSourceIndex, 0, Sites.Length - 1)];
 
     public static string ModsUrl => Current.ModsUrl;
     public static string BlueprintsUrl => Current.BlueprintsUrl;
@@ -201,7 +201,7 @@ public static class ModSource
         {
             try
             {
-                string cached = await File.ReadAllTextAsync(cachePath, ct).ConfigureAwait(false);
+                string cached = await Net48Compat.ReadAllTextAsync(cachePath).ConfigureAwait(false);
                 if (!string.IsNullOrWhiteSpace(cached))
                 {
                     LastLoadFromCache = true;
@@ -217,12 +217,12 @@ public static class ModSource
 
         try
         {
-            string body = await Client.GetStringAsync(url, ct).ConfigureAwait(false);
+            string body = await Client.GetStringAsync(url).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(body)) throw new IOException("返回内容为空。");
 
             LastLoadFromCache = false;
             Directory.CreateDirectory(Paths.CacheDir);
-            await File.WriteAllTextAsync(cachePath, body, Utf8NoBom, ct).ConfigureAwait(false);
+            await Net48Compat.WriteAllTextAsync(cachePath, body, Utf8NoBom).ConfigureAwait(false);
             Log.Info($"已更新数据：{url}");
             return body;
         }
@@ -236,7 +236,7 @@ public static class ModSource
                 try
                 {
                     LastLoadFromCache = true;
-                    return await File.ReadAllTextAsync(cachePath, ct).ConfigureAwait(false);
+                    return await Net48Compat.ReadAllTextAsync(cachePath).ConfigureAwait(false);
                 }
                 catch
                 {

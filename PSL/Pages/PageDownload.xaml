@@ -24,8 +24,11 @@
         <ctl:PclPageLeft x:Name="PanLeft" Grid.Column="0" AnimatedControl="PanItem">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel x:Name="PanItem" Margin="0,12,0,0">
-                    <ctl:PclListItem x:Name="ItemGame" Type="RadioBox" Height="36" MinPaddingRight="35"
-                                     VerticalAlignment="Top" Title="游戏本体" Checked="True"
+                    <ctl:PclListItem x:Name="ItemChinese" Type="RadioBox" Height="36" MinPaddingRight="35"
+                                     VerticalAlignment="Top" Title="汉化版" Checked="True"
+                                     Logo="{StaticResource IconDownload}" Click="Tab_Click" />
+                    <ctl:PclListItem x:Name="ItemOriginal" Type="RadioBox" Height="36" MinPaddingRight="35"
+                                     VerticalAlignment="Top" Title="原版（暂不可用）"
                                      Logo="{StaticResource IconGameBox}" Click="Tab_Click" />
                     <TextBlock Text="社区资源" Margin="13,20,5,4" Opacity="0.6" FontSize="12" />
                     <ctl:PclListItem x:Name="ItemMod" Type="RadioBox" Height="36" MinPaddingRight="35"
@@ -58,6 +61,59 @@
             <ScrollViewer x:Name="PanBack" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled">
                 <StackPanel x:Name="PanMain" Margin="25" Grid.IsSharedSizeScope="True">
+
+                    <!-- ============ 汉化版（对应 PCL 顶部「最新预览版 / 最新正式版」卡的位置） ============ -->
+                    <StackPanel x:Name="PanChinese" Visibility="Collapsed">
+                        <ctl:PclCard x:Name="CardLatest" Margin="0,0,0,15" Title="最新汉化版">
+                            <Grid Margin="25,38,25,18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="46" Height="46" CornerRadius="6"
+                                        Background="{StaticResource BrushPrimaryPale}">
+                                    <Image x:Name="ImgLatest" Width="38" Height="38" Stretch="Uniform" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtLatestName" FontSize="17" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="TxtLatestInfo" Margin="0,3,0,0" FontSize="11"
+                                               Foreground="{StaticResource ColorBrushGray3}" />
+                                </StackPanel>
+                                <Button Grid.Column="2" Style="{StaticResource BtnPrimary}" Content="下载"
+                                        MinWidth="110" Padding="13,0" Height="35" VerticalAlignment="Center"
+                                        Click="BtnLatestDownload_Click" />
+                            </Grid>
+                        </ctl:PclCard>
+
+                        <ctl:PclCard x:Name="CardChineseList" Margin="0,0,0,15" Title="全部汉化版">
+                            <StackPanel x:Name="PanChineseList" Margin="12,38,12,12" />
+                        </ctl:PclCard>
+
+                        <ctl:PclCard x:Name="CardChineseEmpty" Margin="0,0,0,15" Visibility="Collapsed">
+                            <StackPanel Margin="20,17">
+                                <TextBlock x:Name="TxtChineseEmptyTitle" Text="正在读取版本列表" FontSize="19"
+                                           HorizontalAlignment="Center" Margin="0,0,0,9"
+                                           Foreground="{StaticResource ColorBrush3}" />
+                                <Rectangle Height="2" HorizontalAlignment="Stretch"
+                                           Fill="{StaticResource ColorBrush3}" />
+                                <TextBlock x:Name="TxtChineseEmpty" Text="正在连接汉化版仓库…" Margin="10,15,10,0"
+                                           TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center"
+                                           Foreground="{StaticResource ColorBrushGray1}" />
+                                <Button Style="{StaticResource BtnPrimary}" Content="刷新"
+                                        Height="35" MinWidth="140" Padding="13,0"
+                                        HorizontalAlignment="Center" Margin="0,15,0,0"
+                                        Click="BtnRefreshChinese_Click" />
+                            </StackPanel>
+                        </ctl:PclCard>
+
+                        <ctl:PclHint Theme="Blue" Margin="0,0,0,15">
+                            <TextBlock TextWrapping="Wrap" LineHeight="19"
+                                       Foreground="{StaticResource ColorBrushGray1}"
+                                       Text="汉化版来自 Chengxidaxia/SFS1.6Chinese 的 Release；版本名取 Release 名称，安装包带密码时会自动使用内置安装密码。" />
+                        </ctl:PclHint>
+                    </StackPanel>
 
                     <!-- 搜索条件卡 -->
                     <ctl:PclCard x:Name="CardSearch" Margin="0,0,0,15" Title="搜索资源">
@@ -128,11 +184,11 @@
                     </ctl:PclCard>
 
                     <!-- ============ 游戏本体下载（WIP 占位，对应 PCL 的「原版游戏」项） ============ -->
-                    <ctl:PclCard x:Name="CardGame" Margin="0,0,0,15" Title="游戏本体下载" Visibility="Collapsed">
+                    <ctl:PclCard x:Name="CardGame" Margin="0,0,0,15" Title="原版下载" Visibility="Collapsed">
                         <StackPanel Margin="25,40,25,20">
                             <TextBlock TextWrapping="Wrap" LineHeight="20"
                                        Foreground="{StaticResource ColorBrushGray1}"
-                                       Text="游戏本体下载功能正在开发中（WIP）。" />
+                                       Text="原版游戏下载功能正在开发中（WIP），暂时只能下载汉化版。" />
                             <ctl:PclHint Margin="0,14,0,0" Theme="Blue">
                                 <TextBlock TextWrapping="Wrap" LineHeight="19"
                                            Foreground="{StaticResource ColorBrushGray1}"

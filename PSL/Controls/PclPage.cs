@@ -61,7 +61,7 @@ internal static class PclPageAnimation
         foreach (Seg s in segs)
         {
             if (t <= s.Start) continue;
-            double u = Math.Clamp((t - s.Start) / s.Duration, 0, 1);
+            double u = Net48Math.Clamp((t - s.Start) / s.Duration, 0, 1);
             sum += s.Delta * s.Ease(u);
         }
         return sum;
@@ -390,7 +390,7 @@ internal static class PclPageAnimation
         Storyboard.SetTargetProperty(scale, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
         for (double t = 0; t <= 400 + 1e-9; t += SampleStep)
         {
-            double v = 0.96 + 0.04 * BackOut(Math.Clamp(t / 400, 0, 1), PowerWeak);
+            double v = 0.96 + 0.04 * BackOut(Net48Math.Clamp(t / 400, 0, 1), PowerWeak);
             scale.KeyFrames.Add(new LinearDoubleKeyFrame(v, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(t))));
         }
         board.Children.Add(scale);
@@ -428,7 +428,7 @@ internal static class PclPageAnimation
         Storyboard.SetTargetProperty(scale, new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
         for (double t = 0; t <= 110 + 1e-9; t += SampleStep)
         {
-            double v = 1 - 0.05 * FluentIn(Math.Clamp(t / 110, 0, 1), PowerWeak);
+            double v = 1 - 0.05 * FluentIn(Net48Math.Clamp(t / 110, 0, 1), PowerWeak);
             scale.KeyFrames.Add(new LinearDoubleKeyFrame(v, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(t))));
         }
         board.Children.Add(scale);

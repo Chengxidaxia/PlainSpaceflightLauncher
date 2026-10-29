@@ -62,6 +62,10 @@ public partial class PageSettings : PclPage, IPageRefresh
 
             ChkPreferDirect.IsChecked = cfg.PreferDirectLink;
 
+            CmbGithubProxy.ItemsSource = GithubProxy.Options.Select(o => o.Name).ToList();
+            CmbGithubProxy.SelectedIndex = GithubProxy.Index;
+            RefreshProxyHint();
+
             SyncUi();
 
             string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
@@ -79,20 +83,13 @@ public partial class PageSettings : PclPage, IPageRefresh
 
     private void ChangeLibrary_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "选择游戏库目录（.sfs）",
-            Multiselect = false
-        };
-
         string current = PslConfig.Current.SfsDirectory;
-        if (Directory.Exists(current)) dialog.InitialDirectory = current;
+        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择游戏库目录（.sfs）", current);
+        if (picked is null) return;
 
-        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
-
-        GameLibrary.SetLibraryPath(dialog.FolderName);
+        GameLibrary.SetLibraryPath(picked);
         Reload();
-        MainWindow.Toast($"游戏库已切换到：{dialog.FolderName}");
+        MainWindow.Toast($"游戏库已切换到：{picked}");
     }
 
     private void OpenLibrary_Click(object sender, RoutedEventArgs e)
@@ -291,14 +288,14 @@ public partial class PageSettings : PclPage, IPageRefresh
             for (int i = 0; i < PanThemePresets.Children.Count; i++)
             {
                 if (PanThemePresets.Children[i] is RadioButton rb)
-                    rb.IsChecked = (cfg.ThemePreset == -1 ? i == PanThemePresets.Children.Count - 1 : i == Math.Clamp(cfg.ThemePreset, 0, PslTheme.Presets.Length - 1));
+                    rb.IsChecked = (cfg.ThemePreset == -1 ? i == PanThemePresets.Children.Count - 1 : i == Net48Math.Clamp(cfg.ThemePreset, 0, PslTheme.Presets.Length - 1));
             }
 
             SyncSliders();
 
             for (int i = 0; i < PanLogoTypes.Children.Count; i++)
                 if (PanLogoTypes.Children[i] is RadioButton rb)
-                    rb.IsChecked = i == Math.Clamp(cfg.LogoType, 0, 2);
+                    rb.IsChecked = i == Net48Math.Clamp(cfg.LogoType, 0, 2);
 
             PanLogoText.Visibility = cfg.LogoType == 2 ? Visibility.Visible : Visibility.Collapsed;
             if (TxtLogoText.Text != cfg.LogoText) TxtLogoText.Text = cfg.LogoText;
@@ -316,9 +313,9 @@ public partial class PageSettings : PclPage, IPageRefresh
 
     private void SyncSliders()
     {
-        SliderHue.Value = Math.Clamp(PslConfig.Current.UiHue, 0, 360);
-        SliderSat.Value = Math.Clamp(PslConfig.Current.UiSat, 0, 100);
-        SliderBgOpacity.Value = Math.Clamp(PslConfig.Current.BackgroundOpacity / 10, 0, 100);
+        SliderHue.Value = Net48Math.Clamp(PslConfig.Current.UiHue, 0, 360);
+        SliderSat.Value = Net48Math.Clamp(PslConfig.Current.UiSat, 0, 100);
+        SliderBgOpacity.Value = Net48Math.Clamp(PslConfig.Current.BackgroundOpacity / 10, 0, 100);
     }
 
     private void SliderHueSat_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -333,7 +330,7 @@ public partial class PageSettings : PclPage, IPageRefresh
         ApplyTheme();
 
         // 自定义滑条变化后把预设选中态改成「自定义」
-        if (PanThemePresets.Children.Count > 0 && PanThemePresets.Children[^1] is RadioButton custom)
+        if (PanThemePresets.Children.Count > 0 && PanThemePresets.Children[PanThemePresets.Children.Count - 1] is RadioButton custom)
         {
             _syncingUi = true;
             custom.IsChecked = true;
@@ -384,4 +381,73 @@ public partial class PageSettings : PclPage, IPageRefresh
     }
 
     private static void ApplyTheme() => MainWindow.Instance?.ApplyTheme();
+
+    // ==================== 汉化版下载源 ====================
+
+    private void RefreshProxyHint()
+    {
+        int index = GithubProxy.Index;
+        string prefix = GithubProxy.Prefix;
+
+        TxtProxyHint.Text = index switch
+        {
+            3 => "GitHub 直连：不经过任何代理，链接原样使用（国内网络可能很慢或打不开）。",
+            4 => prefix.Length == 0
+                ? "还没有填写自定义前缀，点右边「修改前缀」填一个（用法与 gh-proxy.com 一致）。"
+                : "自定义前缀：" + prefix + "github.com/…",
+            _ => "当前前缀：" + prefix + " ；用法与 gh-proxy.com 一致（前缀 + 完整 GitHub 链接）。"
+        };
+
+        BtnProxyEdit.Visibility = index == 4 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void CmbGithubProxy_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_updating || CmbGithubProxy.SelectedIndex < 0) return;
+
+        PslConfig cfg = PslConfig.Current;
+        int index = CmbGithubProxy.SelectedIndex;
+
+        // 选到「自定义」但还没填前缀 → 直接弹输入框
+        if (index == 4 && string.IsNullOrWhiteSpace(cfg.GithubProxyCustom))
+        {
+            string? prefix = InputDialog.Show(Window.GetWindow(this), "自定义下载源",
+                "填一个前缀，用法与 gh-proxy.com 一致：\n前缀 + 完整 GitHub 链接（例如 https://example.com/）。",
+                "https://");
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                _updating = true;
+                CmbGithubProxy.SelectedIndex = cfg.GithubProxyIndex;
+                _updating = false;
+                return;
+            }
+            cfg.GithubProxyCustom = GithubProxy.Normalize(prefix);
+        }
+
+        cfg.GithubProxyIndex = index;
+        cfg.Save();
+        RefreshProxyHint();
+        MainWindow.Toast($"下载源已切换到：{GithubProxy.Options[index].Name}");
+    }
+
+    private void BtnProxyEdit_Click(object sender, RoutedEventArgs e)
+    {
+        PslConfig cfg = PslConfig.Current;
+        string? prefix = InputDialog.Show(Window.GetWindow(this), "自定义下载源",
+            "修改前缀（用法与 gh-proxy.com 一致：前缀 + 完整 GitHub 链接）：",
+            string.IsNullOrWhiteSpace(cfg.GithubProxyCustom) ? "https://" : cfg.GithubProxyCustom);
+
+        if (string.IsNullOrWhiteSpace(prefix)) return;
+
+        cfg.GithubProxyCustom = GithubProxy.Normalize(prefix);
+        cfg.GithubProxyIndex = 4;
+        cfg.Save();
+
+        _updating = true;
+        CmbGithubProxy.SelectedIndex = 4;
+        _updating = false;
+
+        RefreshProxyHint();
+        MainWindow.Toast("自定义下载源已保存：" + cfg.GithubProxyCustom);
+    }
 }

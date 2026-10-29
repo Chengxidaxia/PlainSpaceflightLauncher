@@ -371,14 +371,10 @@ public partial class PageSelect : PclPage, IPageRefresh
     /// </summary>
     private void AddBigVersionFolder()
     {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "选择装着多个 SFS 版本的文件夹（只识别它的直接子文件夹）",
-            Multiselect = false
-        };
-        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择装着多个 SFS 版本的文件夹（只识别它的直接子文件夹）");
+        if (picked is null) return;
 
-        string parent = GameFolder.Normalize(dialog.FolderName);
+        string parent = GameFolder.Normalize(picked);
 
         // 已在列表里：直接切过去
         GameFolder? exists = GameLibrary.Folders.FirstOrDefault(f => GameLibrary.PathEquals(f.Path, parent));
@@ -408,14 +404,10 @@ public partial class PageSelect : PclPage, IPageRefresh
     /// <summary>「添加版本文件夹」：把一个本身就是版本的文件夹导入游戏库（移动 / 复制 / 目录联接）。</summary>
     private void AddVersionFolder()
     {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）",
-            Multiselect = false
-        };
-        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）");
+        if (picked is null) return;
 
-        string folder = dialog.FolderName;
+        string folder = picked;
         if (!VersionManager.Validate(folder, out string error))
         {
             MessageBox.Show(Window.GetWindow(this), error, "无法添加这个文件夹",

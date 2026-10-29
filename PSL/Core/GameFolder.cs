@@ -45,12 +45,12 @@ public sealed class GameFolder
     {
         if (string.IsNullOrWhiteSpace(path)) return "";
 
-        string[] parts = Normalize(path).Split(System.IO.Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = Normalize(path).Split(new[] { System.IO.Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return path;
 
-        string last = parts[^1];
+        string last = parts[parts.Length - 1];
         if (last is ".sfs" or ".minecraft")
-            return parts.Length >= 2 ? parts[^2] : last;
+            return parts.Length >= 2 ? parts[parts.Length - 2] : last;
 
         return last;
     }

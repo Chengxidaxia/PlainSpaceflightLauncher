@@ -55,9 +55,9 @@ public static class PslTheme
         s = l < 0.5 ? s * l + l : s * (1 - l) + l;
         l = 2 * l - s;
         return Color.FromRgb(
-            (byte)Math.Clamp(HueComponent(l, s, h + 1.0 / 3) * 255, 0, 255),
-            (byte)Math.Clamp(HueComponent(l, s, h) * 255, 0, 255),
-            (byte)Math.Clamp(HueComponent(l, s, h - 1.0 / 3) * 255, 0, 255));
+            (byte)Net48Math.Clamp(HueComponent(l, s, h + 1.0 / 3) * 255, 0, 255),
+            (byte)Net48Math.Clamp(HueComponent(l, s, h) * 255, 0, 255),
+            (byte)Net48Math.Clamp(HueComponent(l, s, h - 1.0 / 3) * 255, 0, 255));
     }
 
     /// <summary>PCL 的 FromHSL2（分段亮度映射，ModBase.vb）。</summary>
@@ -65,7 +65,7 @@ public static class PslTheme
     {
         if (sat == 0)
         {
-            byte g = (byte)Math.Clamp(light * 2.55, 0, 255);
+            byte g = (byte)Net48Math.Clamp(light * 2.55, 0, 255);
             return Color.FromRgb(g, g, g);
         }
 
@@ -152,7 +152,7 @@ public static class PslTheme
                 .ToArray();
             if (files.Length == 0) return null;
 
-            string pick = files[Random.Shared.Next(files.Length)];
+            string pick = files[Net48Compat.Random.Next(files.Length)];
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;

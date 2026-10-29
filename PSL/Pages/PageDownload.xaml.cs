@@ -20,15 +20,19 @@ public partial class PageDownload : PclPage, IPageRefresh
     /// <summary>每页显示的资源数。</summary>
     private const int PageSize = 20;
 
-    /// <summary>左栏分类。</summary>
-    private enum Tab { Game, Mod, TexturePack, PartsPack, Blueprint }
+    /// <summary>左栏分类（汉化版 / 原版 / 社区资源）。</summary>
+    private enum Tab { Chinese, Original, Mod, TexturePack, PartsPack, Blueprint }
 
     private List<DownloadRow> _all = new();
     private List<DownloadRow> _view = new();
     private bool _loading;
     private int _page = 1;
-    private Tab _tab = Tab.Game;
+    private Tab _tab = Tab.Chinese;
     private bool _syncingControls;
+
+    private List<ChineseRelease> _releases = new();
+    private bool _releaseLoading;
+    private System.Windows.Media.Imaging.BitmapImage? _chineseIcon;
 
     public PageDownload()
     {
@@ -41,7 +45,7 @@ public partial class PageDownload : PclPage, IPageRefresh
             try
             {
                 ComboSite.ItemsSource = ModSource.Sites.Select(s => s.Name).ToList();
-                ComboSite.SelectedIndex = Math.Clamp(PslConfig.Current.ModSourceIndex, 0, ModSource.Sites.Length - 1);
+                ComboSite.SelectedIndex = Net48Math.Clamp(PslConfig.Current.ModSourceIndex, 0, ModSource.Sites.Length - 1);
             }
             finally
             {
@@ -51,11 +55,13 @@ public partial class PageDownload : PclPage, IPageRefresh
             // 调试用 --tab= 指定初始分类
             switch (App.StartupDownloadTab?.ToLowerInvariant())
             {
+                case "original": Tab_Click(ItemOriginal, EventArgs.Empty); break;
+                case "chinese": Tab_Click(ItemChinese, EventArgs.Empty); break;
                 case "mod": Tab_Click(ItemMod, EventArgs.Empty); break;
                 case "texture": Tab_Click(ItemTexture, EventArgs.Empty); break;
                 case "parts": Tab_Click(ItemParts, EventArgs.Empty); break;
                 case "blueprint": Tab_Click(ItemBlueprint, EventArgs.Empty); break;
-                default: ApplyFilter(); break;
+                default: Tab_Click(ItemChinese, EventArgs.Empty); break;
             }
         };
     }
@@ -63,7 +69,9 @@ public partial class PageDownload : PclPage, IPageRefresh
     public void OnPageEnter()
     {
         // 首次进入由 Loaded 负责；之后仅在数据为空时补一次
-        if (!_loading && _all.Count == 0 && _tab != Tab.Game) _ = LoadAsync(false);
+        if (_tab == Tab.Chinese && _releases.Count == 0 && !_releaseLoading) _ = LoadChineseAsync(false);
+        if (_tab is Tab.Mod or Tab.TexturePack or Tab.PartsPack or Tab.Blueprint &&
+            !_loading && _all.Count == 0) _ = LoadAsync(false);
     }
 
     /// <summary>列表行数据。</summary>
@@ -105,11 +113,11 @@ public partial class PageDownload : PclPage, IPageRefresh
         if (_loading) return;
         _loading = true;
 
-        // 游戏本体是 WIP 占位，不需要拉资源数据
-        if (_tab == Tab.Game)
+        // 汉化版 / 原版不走社区资源数据源
+        if (_tab is Tab.Chinese or Tab.Original)
         {
             _loading = false;
-            RenderGameTab();
+            ApplyTabVisuals();
             return;
         }
 
@@ -202,18 +210,27 @@ public partial class PageDownload : PclPage, IPageRefresh
 
         _tab = item.Name switch
         {
+            "ItemChinese" => Tab.Chinese,
+            "ItemOriginal" => Tab.Original,
             "ItemMod" => Tab.Mod,
             "ItemTexture" => Tab.TexturePack,
             "ItemParts" => Tab.PartsPack,
             "ItemBlueprint" => Tab.Blueprint,
-            _ => Tab.Game
+            _ => Tab.Chinese
         };
 
         _page = 1;
 
-        if (_tab == Tab.Game)
+        if (_tab == Tab.Chinese)
         {
-            RenderGameTab();
+            ApplyTabVisuals();
+            if (_releases.Count == 0 && !_releaseLoading) _ = LoadChineseAsync(false);
+            return;
+        }
+
+        if (_tab == Tab.Original)
+        {
+            ApplyTabVisuals();
             return;
         }
 
@@ -222,17 +239,158 @@ public partial class PageDownload : PclPage, IPageRefresh
         else ApplyFilter();
     }
 
-    /// <summary>游戏本体（WIP）页：只显示占位卡。</summary>
-    private void RenderGameTab()
+    /// <summary>按当前分类同步左栏勾选态与右栏卡片的显隐。</summary>
+    private void ApplyTabVisuals()
     {
-        ItemGame.Checked = true;
-        ItemMod.Checked = ItemTexture.Checked = ItemParts.Checked = ItemBlueprint.Checked = false;
+        ItemChinese.Checked = _tab == Tab.Chinese;
+        ItemOriginal.Checked = _tab == Tab.Original;
+        ItemMod.Checked = _tab == Tab.Mod;
+        ItemTexture.Checked = _tab == Tab.TexturePack;
+        ItemParts.Checked = _tab == Tab.PartsPack;
+        ItemBlueprint.Checked = _tab == Tab.Blueprint;
 
-        CardSearch.Visibility = Visibility.Collapsed;
-        CardGame.Visibility = Visibility.Visible;
-        PanContent.Visibility = Visibility.Collapsed;
-        PanEmpty.Visibility = Visibility.Collapsed;
+        bool chinese = _tab == Tab.Chinese;
+        bool original = _tab == Tab.Original;
+        bool community = !chinese && !original;
+
+        PanChinese.Visibility = chinese ? Visibility.Visible : Visibility.Collapsed;
+        CardSearch.Visibility = community ? Visibility.Visible : Visibility.Collapsed;
+        CardGame.Visibility = original ? Visibility.Visible : Visibility.Collapsed;
+        PanContent.Visibility = community && _view.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PanEmpty.Visibility = community && _view.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
     }
+
+    // ==================== 汉化版 ====================
+
+    /// <summary>对外的入口：从主页公告/更新提示跳到汉化版分类。</summary>
+    public void ShowChinese()
+    {
+        _tab = Tab.Chinese;
+        ApplyTabVisuals();
+        if (_releases.Count == 0 && !_releaseLoading) _ = LoadChineseAsync(false);
+    }
+
+    private async Task LoadChineseAsync(bool force)
+    {
+        if (_releaseLoading) return;
+        _releaseLoading = true;
+
+        CardChineseEmpty.Visibility = Visibility.Visible;
+        CardChineseList.Visibility = Visibility.Collapsed;
+        CardLatest.Visibility = Visibility.Collapsed;
+        TxtChineseEmptyTitle.Text = "正在获取版本列表";
+        TxtChineseEmpty.Text = "正在连接汉化版仓库…";
+
+        try
+        {
+            List<ChineseRelease> list = await ChineseRepo.LoadReleasesAsync(force);
+            _releases = list;
+            RenderChinese();
+
+            if (list.Count == 0)
+            {
+                TxtChineseEmptyTitle.Text = "没有获取到版本";
+                TxtChineseEmpty.Text = "仓库里还没有可用的 Release，或网络不通。可以点「刷新」重试，" +
+                                       "或在设置里换一个下载源。";
+                CardChineseEmpty.Visibility = Visibility.Visible;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error("加载汉化版版本列表失败", ex);
+            TxtChineseEmptyTitle.Text = "加载失败";
+            TxtChineseEmpty.Text = ex.Message + "\n可以在设置里换一个下载源后重试。";
+            CardChineseEmpty.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            _releaseLoading = false;
+        }
+    }
+
+    private void RenderChinese()
+    {
+        _chineseIcon ??= LoadChineseIcon();
+
+        bool hasData = _releases.Count > 0;
+        CardLatest.Visibility = hasData ? Visibility.Visible : Visibility.Collapsed;
+        CardChineseList.Visibility = hasData ? Visibility.Visible : Visibility.Collapsed;
+        CardChineseEmpty.Visibility = hasData ? Visibility.Collapsed : Visibility.Visible;
+
+        if (!hasData) return;
+
+        ChineseRelease latest = _releases[0];
+        ImgLatest.Source = _chineseIcon;
+        TxtLatestName.Text = latest.DisplayName;
+        TxtLatestInfo.Text = $"{latest.SizeText}　·　{latest.PublishedAt.ToLocalTime():yyyy-MM-dd}" +
+                             (ChineseRepo.LastLoadFromCache ? "　·　（列表来自本地缓存）" : "");
+
+        PanChineseList.Children.Clear();
+        foreach (ChineseRelease release in _releases)
+        {
+            var item = new PclResourceItem
+            {
+                Image = _chineseIcon,
+                Title = release.DisplayName,
+                Info = FirstLine(release.Body),
+                Version = release.DisplayName,
+                DownloadCount = release.SizeText,
+                Time = release.PublishedAt == DateTimeOffset.MinValue
+                    ? "未知"
+                    : release.PublishedAt.ToLocalTime().ToString("yyyy-MM-dd"),
+                Source = "汉化版",
+                Cursor = System.Windows.Input.Cursors.Hand,
+                ToolTip = release.Tag
+            };
+
+            // PCL 的 MyResourceItem 本身没有行内按钮 —— 点整行进详情（这里直接进安装页）
+            ChineseRelease captured = release;
+            item.Click += (_, _) => OpenInstall(captured);
+            PanChineseList.Children.Add(item);
+        }
+    }
+
+    private static string FirstLine(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "（该版本没有填写说明）";
+
+        string line = text.Replace("\r", "").Split('\n').FirstOrDefault(l => l.Trim().Length > 0) ?? "";
+
+        // 去掉 markdown 链接语法：[文字](url) → 文字
+        line = System.Text.RegularExpressions.Regex.Replace(line, @"\[([^\]]*)\]\([^)]*\)", "$1");
+        line = System.Text.RegularExpressions.Regex.Replace(line, @"https?://\S+", "");
+        line = line.Trim();
+
+        if (line.Length == 0) return "（该版本没有填写说明）";
+        return line.Length > 60 ? line.Substring(0, 60) + "…" : line;
+    }
+
+    private static System.Windows.Media.Imaging.BitmapImage? LoadChineseIcon()
+    {
+        try
+        {
+            return new System.Windows.Media.Imaging.BitmapImage(new Uri(ChineseRepo.IconUri));
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"加载汉化版图标失败：{ex.Message}");
+            return null;
+        }
+    }
+
+    private void OpenInstall(ChineseRelease release)
+    {
+        PageChineseInstall.Target = release;
+        MainWindow.Instance?.Navigate("chinese");
+    }
+
+    private void BtnLatestDownload_Click(object sender, RoutedEventArgs e)
+    {
+        if (_releases.Count == 0) return;
+        OpenInstall(_releases[0]);
+    }
+
+    private void BtnRefreshChinese_Click(object sender, RoutedEventArgs e) => _ = LoadChineseAsync(true);
 
     // ==================== 过滤 / 分页 ====================
 
@@ -297,9 +455,15 @@ public partial class PageDownload : PclPage, IPageRefresh
 
     private void BtnRefresh_Click(object sender, RoutedEventArgs e)
     {
-        if (_tab == Tab.Game)
+        if (_tab == Tab.Chinese)
         {
-            MainWindow.Toast("游戏本体下载功能正在开发中（WIP）");
+            _ = LoadChineseAsync(true);
+            return;
+        }
+
+        if (_tab == Tab.Original)
+        {
+            MainWindow.Toast("原版游戏下载功能正在开发中（WIP），暂时只能下载汉化版。");
             return;
         }
 
@@ -313,21 +477,9 @@ public partial class PageDownload : PclPage, IPageRefresh
 
     private void ApplyFilter()
     {
-        // 同步左栏勾选态（PclListItem 不自动互斥）
-        ItemGame.Checked = _tab == Tab.Game;
-        ItemMod.Checked = _tab == Tab.Mod;
-        ItemTexture.Checked = _tab == Tab.TexturePack;
-        ItemParts.Checked = _tab == Tab.PartsPack;
-        ItemBlueprint.Checked = _tab == Tab.Blueprint;
-
-        if (_tab == Tab.Game)
-        {
-            RenderGameTab();
-            return;
-        }
-
-        CardSearch.Visibility = Visibility.Visible;
-        CardGame.Visibility = Visibility.Collapsed;
+        // 同步左栏勾选态与卡片显隐（PclListItem 不自动互斥）
+        ApplyTabVisuals();
+        if (_tab is Tab.Chinese or Tab.Original) return;
 
         IEnumerable<DownloadRow> query = _all;
 
@@ -536,7 +688,7 @@ public partial class PageDownload : PclPage, IPageRefresh
             {
                 var downloader = new MultiThreadDownloader
                 {
-                    ThreadCount = Math.Clamp(PslConfig.Current.DownloadThreads, 1, 32)
+                    ThreadCount = Net48Math.Clamp(PslConfig.Current.DownloadThreads, 1, 32)
                 };
 
                 var progress = new Progress<DownloadProgress>(p =>
