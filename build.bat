@@ -2,7 +2,7 @@
 chcp 936 >nul
 rem ==========================================================
 rem  PlainSpaceflightLauncher (PSL) build script
-rem  Output: PSL\bin\Release\net8.0-windows\PlainSpaceflightLauncher.exe
+rem  Output: PSL\bin\Release\net48\PlainSpaceflightLauncher.exe
 rem ==========================================================
 setlocal
 cd /d "%~dp0"
@@ -16,7 +16,8 @@ if errorlevel 1 goto fail
 
 echo.
 echo Build OK.
-echo   PSL\bin\Release\net8.0-windows\PlainSpaceflightLauncher.exe
+echo   PSL\bin\Release\net48\PlainSpaceflightLauncher.exe
+echo   (pack the whole net48 folder: exe + exe.config + runtimes)
 echo.
 goto end
 

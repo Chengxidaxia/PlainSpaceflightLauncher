@@ -1,7 +1,7 @@
 # PlainSpaceflightLauncher (PSL)
 
 Spaceflight Simulator 的第三方启动器。界面风格参考自 [Plain Craft Launcher 2 (PCL2)](https://github.com/Meloong-Git/PCL)，
-底层为完全独立实现（C# / WPF / .NET 8），不含 PCL 的源代码。
+底层为完全独立实现（C# / WPF / .NET Framework 4.8，与 PCL 同一运行时），不含 PCL 的源代码。
 
 > 本项目的界面设计参考了龙腾猫跃开发的 Plain Craft Launcher 2，在此致谢。
 > PSL 与 PCL 官方、Spaceflight Simulator 开发商均无隶属或合作关系。
@@ -35,8 +35,8 @@ Spaceflight Simulator 的第三方启动器。界面风格参考自 [Plain Craft
 
 ## 系统要求
 
-- Windows 10 / 11
-- [.NET Desktop Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)（框架依赖发布，未安装时会提示下载）
+- Windows 10 / 11（自带 .NET Framework 4.8，**无需另装运行时**）
+- WebView2 运行时（仅「友站」页的内置浏览器需要，Win10/11 一般已自带）
 - Spaceflight Simulator **1.6 及以上**版本（DLL 模组仅 PC / Steam 版可用）
 
 ## 构建
@@ -51,7 +51,10 @@ build.bat
 dotnet build PSL\PSL.csproj -c Release
 ```
 
-产物：`PSL\bin\Release\net8.0-windows\PlainSpaceflightLauncher.exe`
+产物目录：`PSL\bin\Release\net48\`
+
+主程序是 `PlainSpaceflightLauncher.exe`（约 2 MB）。发布时请**整个目录一起打包**——
+exe 旁边还需要 `PlainSpaceflightLauncher.exe.config` 和 `runtimes\x86\native\WebView2Loader.dll`。
 
 ## 目录结构
 
