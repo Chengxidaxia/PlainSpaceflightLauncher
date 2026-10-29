@@ -25,6 +25,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         Paths.EnsureCreated();
+        WebView2LoaderBootstrap.Ensure();
         Log.Info("================ PSL 启动 ================");
         Log.Info($"版本 {typeof(App).Assembly.GetName().Version}，程序目录 {Paths.AppDir}");
 

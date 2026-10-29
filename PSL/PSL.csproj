@@ -16,6 +16,8 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
 
 
     <Version>1.0.0</Version>
@@ -33,6 +35,8 @@
   <!-- WindowsDesktop SDK 的隐式 using 不含 System.IO，这里补上 -->
   <ItemGroup>
     <Resource Include="Assets\Chinese.ico" />
+    <!-- WebView2 原生加载器：嵌进 exe，运行时释放到数据目录 -->
+    <EmbeddedResource Include="Assets\WebView2Loader.dll" LogicalName="PSL.Assets.WebView2Loader.dll" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
@@ -52,4 +56,9 @@
 
 
 
+  <!-- net48 的 WebView2 包会带 runtimes\win-x86\native\WebView2Loader.dll 到输出目录；
+       我们已经把它嵌进 exe 并在启动时释放，这里删掉，保证产物只有一个文件 -->
+  <Target Name="RemoveWebView2Runtimes" AfterTargets="Build">
+    <RemoveDir Directories="$(OutDir)runtimes" Condition="Exists('$(OutDir)runtimes')" />
+  </Target>
 </Project>

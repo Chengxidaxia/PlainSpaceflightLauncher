@@ -51,10 +51,10 @@ build.bat
 dotnet build PSL\PSL.csproj -c Release
 ```
 
-产物目录：`PSL\bin\Release\net48\`
+产物：`PSL\bin\Release\net48\PlainSpaceflightLauncher.exe`（约 2 MB，**单文件**）
 
-主程序是 `PlainSpaceflightLauncher.exe`（约 2 MB）。发布时请**整个目录一起打包**——
-exe 旁边还需要 `PlainSpaceflightLauncher.exe.config` 和 `runtimes\x86\native\WebView2Loader.dll`。
+托管依赖由 Costura 嵌入、WebView2 原生加载器作为嵌入资源在启动时释放到 `PSL\` 数据目录，
+所以构建产物目录里只有这一个 exe，直接分发即可。
 
 ## 目录结构
 

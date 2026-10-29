@@ -23,17 +23,11 @@ jobs:
       - name: Build (.NET Framework 4.8)
         run: msbuild PSL/PSL.csproj /p:Configuration=Release /v:minimal
 
-      - name: Pack
-        shell: pwsh
-        run: Compress-Archive -Path PSL/bin/Release/net48/* -DestinationPath PlainSpaceflightLauncher.zip -Force
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PlainSpaceflightLauncher-net48
-          path: |
-            PSL/bin/Release/net48/PlainSpaceflightLauncher.exe
-            PlainSpaceflightLauncher.zip
+          name: PlainSpaceflightLauncher
+          path: PSL/bin/Release/net48/PlainSpaceflightLauncher.exe
 
       - name: Create release
         if: startsWith(github.ref, 'refs/tags/')
@@ -43,15 +37,13 @@ jobs:
           body: |
             PlainSpaceflightLauncher（PSL）—— Spaceflight Simulator 第三方启动器。
 
-            主程序是 `PlainSpaceflightLauncher.exe`（.NET Framework 4.8，Windows 10/11 自带，无需另装运行时）。
-            同目录还需要 `PlainSpaceflightLauncher.exe.config` 与 `runtimes\x86\native\WebView2Loader.dll`，
-            因此**请下载 `PlainSpaceflightLauncher.zip`，解压后运行里面的 exe**。
+            下载下面的 `PlainSpaceflightLauncher.exe` 直接运行即可：**单文件**，
+            基于 .NET Framework 4.8（Windows 10/11 自带，无需另装运行时）。
 
-            友站页的内置浏览器需要系统装有 WebView2 运行时（Win10/11 一般自带）。
+            「友站」页的内置浏览器需要系统装有 WebView2 运行时（Win10/11 一般自带；
+            没有的话装一次即可）。
 
             协议：GPL-3.0-only。鸣谢：龙腾猫跃（PCL2）、SFS 中文站。
-          files: |
-            PSL/bin/Release/net48/PlainSpaceflightLauncher.exe
-            PlainSpaceflightLauncher.zip
+          files: PSL/bin/Release/net48/PlainSpaceflightLauncher.exe
           draft: false
           prerelease: false
