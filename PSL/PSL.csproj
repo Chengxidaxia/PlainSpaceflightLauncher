@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -20,9 +20,9 @@
     <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
 
 
-    <Version>1.1.0</Version>
-    <FileVersion>1.1.0.0</FileVersion>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <Version>1.2.0</Version>
+    <FileVersion>1.2.0.0</FileVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <Product>PlainSpaceflightLauncher</Product>
     <AssemblyTitle>PlainSpaceflightLauncher</AssemblyTitle>
     <Description>Spaceflight Simulator 的第三方启动器</Description>
