@@ -5,7 +5,7 @@ using SearchOption = System.IO.SearchOption;
 
 namespace PSL.Core;
 
-/// <summary>把版本文件夹加入游戏库时的方式。</summary>
+/// <summary>把版本文件夹加入游戏目录时的方式。</summary>
 public enum AddVersionMode
 {
     /// <summary>移动到 .sfs 下（同盘秒完成）。</summary>
@@ -35,7 +35,7 @@ public static class VersionManager
 
         if (!Directory.Exists(sfsDir))
         {
-            Log.Warn($"游戏库目录不存在：{sfsDir}");
+            Log.Warn($"游戏目录目录不存在：{sfsDir}");
             return list;
         }
 
@@ -46,7 +46,7 @@ public static class VersionManager
         }
         catch (Exception ex)
         {
-            Log.Error($"枚举游戏库目录失败：{sfsDir}", ex);
+            Log.Error($"枚举游戏目录目录失败：{sfsDir}", ex);
             return list;
         }
 
@@ -95,7 +95,7 @@ public static class VersionManager
         return list;
     }
 
-    /// <summary>校验一个文件夹是否可作为版本加入游戏库，返回失败原因。</summary>
+    /// <summary>校验一个文件夹是否可作为版本加入游戏目录，返回失败原因。</summary>
     public static bool Validate(string folder, out string error)
     {
         if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
@@ -120,7 +120,7 @@ public static class VersionManager
         return true;
     }
 
-    /// <summary>把一个版本文件夹加入游戏库。</summary>
+    /// <summary>把一个版本文件夹加入游戏目录。</summary>
     public static GameVersion Add(string sourceFolder, AddVersionMode mode, string? sfsDir = null)
     {
         sfsDir ??= PslConfig.Current.SfsDirectory;
@@ -130,7 +130,7 @@ public static class VersionManager
         string folderName = Path.GetFileName(sourceFolder);
         string target = Path.Combine(sfsDir, folderName);
 
-        // 已经在游戏库里了
+        // 已经在游戏目录里了
         if (string.Equals(Path.GetFullPath(target), sourceFolder, StringComparison.OrdinalIgnoreCase))
             return new GameVersion(sourceFolder);
 
@@ -197,7 +197,7 @@ public static class VersionManager
         return list.OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    /// <summary>从游戏库移除一个版本（删除到回收站，可恢复）。</summary>
+    /// <summary>从游戏目录移除一个版本（删除到回收站，可恢复）。</summary>
     public static void RemoveToRecycleBin(GameVersion version)
     {
         if (!Directory.Exists(version.FolderPath)) return;

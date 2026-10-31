@@ -125,7 +125,7 @@ public partial class PageHome : PclPage, IPageRefresh
     {
         GameLibrary.Refresh();
         Refresh();
-        MainWindow.Toast("已重新扫描游戏库");
+        MainWindow.Toast("已重新扫描游戏目录");
     }
 
     /// <summary>点左栏中部的「版本图标 + 名字」进入版本选择。</summary>
@@ -163,13 +163,13 @@ public partial class PageHome : PclPage, IPageRefresh
 
         var modes = new[]
         {
-            new PickDialog.Item("move", "移动到游戏库", "同盘时瞬间完成，原文件夹会消失"),
-            new PickDialog.Item("copy", "复制到游戏库", "保留原文件夹，耗时取决于体积"),
+            new PickDialog.Item("move", "移动到游戏目录", "同盘时瞬间完成，原文件夹会消失"),
+            new PickDialog.Item("copy", "复制到游戏目录", "保留原文件夹，耗时取决于体积"),
             new PickDialog.Item("link", "创建目录联接", "不占额外空间，仅在本机有效（需要管理员权限）")
         };
 
         string? mode = PickDialog.Show(Window.GetWindow(this), "添加方式",
-            $"即将把「{Path.GetFileName(folder)}」加入游戏库：\n{GameLibrary.LibraryPath}", modes, "move");
+            $"即将把「{Path.GetFileName(folder)}」加入游戏目录：\n{GameLibrary.LibraryPath}", modes, "move");
 
         if (mode is null) return;
 

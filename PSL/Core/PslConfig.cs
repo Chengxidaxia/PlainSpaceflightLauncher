@@ -7,7 +7,7 @@ namespace PSL.Core;
 /// <summary>PSL 配置（存放在 exe 同级的 PSL/config.json）。</summary>
 public sealed class PslConfig
 {
-    /// <summary>游戏库目录（.sfs）。</summary>
+    /// <summary>游戏目录目录（.sfs）。</summary>
     public string SfsDirectory { get; set; } = Paths.DefaultSfsDir;
 
     /// <summary>上次选中的版本文件夹完整路径（旧配置里可能是文件夹名，读取时会回退匹配）。</summary>
@@ -16,7 +16,7 @@ public sealed class PslConfig
     /// <summary>
     /// 额外添加的游戏文件夹（版本选择页左栏。
     /// 对应 PCL 设置项 <c>LaunchFolders</c>，格式是「名称&gt;路径」以 | 分隔）。
-    /// 游戏库根目录也可以出现在这里，此时只用于覆盖它的显示名（PCL 的 Vanilla 重命名行为）。
+    /// 游戏目录根目录也可以出现在这里，此时只用于覆盖它的显示名（PCL 的 Vanilla 重命名行为）。
     /// </summary>
     public List<FolderEntry> ExtraFolders { get; set; } = new();
 

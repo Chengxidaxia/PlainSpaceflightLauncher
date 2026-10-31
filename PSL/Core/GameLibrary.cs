@@ -12,7 +12,7 @@ public static class GameLibrary
     public static IReadOnlyList<GameVersion> Versions => _versions;
 
     /// <summary>
-    /// 所有游戏文件夹（第 0 项恒为游戏库根目录，其后是「添加大版本文件夹」加进来的）。
+    /// 所有游戏文件夹（第 0 项恒为游戏目录根目录，其后是「添加大版本文件夹」加进来的）。
     /// 对应 PCL 的 <c>McFolderList</c>。
     /// </summary>
     public static IReadOnlyList<GameFolder> Folders => _folders;
@@ -26,7 +26,7 @@ public static class GameLibrary
     /// <summary>版本库发生变化（扫描 / 添加 / 删除 / 切换文件夹 / 切换版本）。</summary>
     public static event Action? Changed;
 
-    /// <summary>游戏库根目录。</summary>
+    /// <summary>游戏目录根目录。</summary>
     public static string LibraryPath => PslConfig.Current.SfsDirectory;
 
     /// <summary>重新扫描所有游戏文件夹。</summary>
@@ -35,7 +35,7 @@ public static class GameLibrary
         _folders.Clear();
         _versions.Clear();
 
-        // 1) 游戏库根目录本身就是一个「游戏文件夹」（PCL 的 Vanilla .minecraft）；
+        // 1) 游戏目录根目录本身就是一个「游戏文件夹」（PCL 的 Vanilla .minecraft）；
         //    它的显示名允许被 ExtraFolders 里的同路径条目覆盖（PCL 对 Vanilla 重命名的做法）。
         string? libraryCustom = PslConfig.Current.ExtraFolders
             .FirstOrDefault(e => PathEquals(e.Path, LibraryPath))?.Name;
@@ -138,7 +138,7 @@ public static class GameLibrary
         return added;
     }
 
-    /// <summary>把某个游戏文件夹从左栏列表移除（游戏库根目录不允许移除）。</summary>
+    /// <summary>把某个游戏文件夹从左栏列表移除（游戏目录根目录不允许移除）。</summary>
     public static bool RemoveFolder(GameFolder folder)
     {
         if (folder.IsLibrary) return false;
@@ -154,7 +154,7 @@ public static class GameLibrary
 
     /// <summary>
     /// 重命名左栏里的游戏文件夹（只改显示名，不动真实目录）。
-    /// 游戏库根目录会被写进 <see cref="PslConfig.ExtraFolders"/> 以覆盖默认名。
+    /// 游戏目录根目录会被写进 <see cref="PslConfig.ExtraFolders"/> 以覆盖默认名。
     /// </summary>
     public static void RenameFolder(GameFolder folder, string newName)
     {
@@ -178,7 +178,7 @@ public static class GameLibrary
             ? null
             : _versions.FirstOrDefault(v => PathEquals(v.FolderPath, folderPath));
 
-    /// <summary>设置游戏库目录并重新扫描。</summary>
+    /// <summary>设置游戏目录目录并重新扫描。</summary>
     public static void SetLibraryPath(string path)
     {
         PslConfig.Current.SfsDirectory = path;

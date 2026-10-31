@@ -62,14 +62,14 @@ public partial class PageChineseInstall : PclPage
                        VersionSetup.ReadBool(current, "Localization", "Enabled");
         TxtHint.Text =
             $"安装位置：{GameLibrary.SelectedFolder?.Path ?? GameLibrary.LibraryPath}\\" +
-            $"<上面输入的名字>\\&#x0a;" +
+            "<上面输入的名字>" + Environment.NewLine +
             "下载完成后会自动解压；安装包带密码时使用内置安装密码，无需手动输入。" +
-            (localOn ? "\n当前版本已开启汉化版功能，安装完成后可以在「版本设置」里继续管理字体与语言包。" : "");
+            (localOn ? Environment.NewLine + "当前版本已开启汉化版功能，安装完成后可以在「版本设置」里继续管理字体与语言包。" : "");
     }
 
     private void BtnBack_Click(object sender, RoutedEventArgs e) => MainWindow.Instance?.PageBack();
 
-    private async void BtnStart_Click(object sender, RoutedEventArgs e)
+    private async void BtnStart_Click(object? sender, EventArgs e)
     {
         if (_busy) return;
 

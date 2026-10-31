@@ -6,7 +6,7 @@ namespace PSL.Core;
 /// 版本选择页左栏里的一个「游戏文件夹」，对应 PCL 的 <c>McFolder</c>。
 /// 它的**直接子文件夹**中、根目录含 SFS 启动文件的那些，各自是一个版本。
 /// <para>
-/// 游戏库根目录（<see cref="GameLibrary.LibraryPath"/>）本身即一个文件夹
+/// 游戏目录根目录（<see cref="GameLibrary.LibraryPath"/>）本身即一个文件夹
 /// （对应 PCL 的 <c>McFolder.Types.Vanilla</c>，「添加大版本文件夹」加进来的额外父目录
 /// 对应 <c>McFolder.Types.Custom</c>）。
 /// </para>
@@ -27,7 +27,7 @@ public sealed class GameFolder
     public string Name { get; set; }
 
     /// <summary>
-    /// 是否是游戏库根目录（PCL 的 Vanilla 文件夹）：不允许「移出列表」，删除时也只清空不删除。
+    /// 是否是游戏目录根目录（PCL 的 Vanilla 文件夹）：不允许「移出列表」，删除时也只清空不删除。
     /// </summary>
     public bool IsLibrary { get; }
 

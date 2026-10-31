@@ -44,7 +44,7 @@ public partial class PageSelect : PclPage, IPageRefresh
         BuildVersions();
     }
 
-    /// <summary>在修改游戏库的这段时间内屏蔽 Changed 事件引起的重复刷新。</summary>
+    /// <summary>在修改游戏目录的这段时间内屏蔽 Changed 事件引起的重复刷新。</summary>
     private void IgnoreLibraryChanged(Action action)
     {
         _ignoreLibraryChanged = true;
@@ -130,7 +130,7 @@ public partial class PageSelect : PclPage, IPageRefresh
         addBig.Click += (_, _) => AddBigVersionFolder();
         PanList.Children.Add(addBig);
 
-        // 「添加版本文件夹」：选一个本身就是版本的目录，导入游戏库（移动 / 复制 / 目录联接）
+        // 「添加版本文件夹」：选一个本身就是版本的目录，导入游戏目录（移动 / 复制 / 目录联接）
         var addOne = new PclListItem
         {
             Type = PclListItem.CheckType.Clickable,
@@ -140,7 +140,7 @@ public partial class PageSelect : PclPage, IPageRefresh
             Title = "添加版本文件夹",
             LogoScale = 0.9,
             Logo = TryFindResource("IconAddCircle") as Geometry,
-            ToolTip = "选择一个本身就是 SFS 版本的文件夹，导入游戏库"
+            ToolTip = "选择一个本身就是 SFS 版本的文件夹，导入游戏目录"
         };
         addOne.Click += (_, _) => AddVersionFolder();
         PanList.Children.Add(addOne);
@@ -333,7 +333,7 @@ public partial class PageSelect : PclPage, IPageRefresh
     {
         MessageBoxResult confirm = MessageBox.Show(
             Window.GetWindow(this),
-            $"确定要把「{version.DisplayName}」从游戏库移除吗？\n\n{version.FolderPath}\n\n" +
+            $"确定要把「{version.DisplayName}」从游戏目录移除吗？\n\n{version.FolderPath}\n\n" +
             "该文件夹会被移动到系统回收站（可从回收站恢复）。",
             "移除版本",
             MessageBoxButton.OKCancel,
@@ -401,7 +401,7 @@ public partial class PageSelect : PclPage, IPageRefresh
         MainWindow.Toast($"已添加文件夹「{GameFolder.DefaultName(parent)}」，识别到 {subs.Count} 个版本");
     }
 
-    /// <summary>「添加版本文件夹」：把一个本身就是版本的文件夹导入游戏库（移动 / 复制 / 目录联接）。</summary>
+    /// <summary>「添加版本文件夹」：把一个本身就是版本的文件夹导入游戏目录（移动 / 复制 / 目录联接）。</summary>
     private void AddVersionFolder()
     {
         string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）");
@@ -417,13 +417,13 @@ public partial class PageSelect : PclPage, IPageRefresh
 
         var modes = new[]
         {
-            new PickDialog.Item("move", "移动到游戏库", "同盘时瞬间完成，原文件夹会消失"),
-            new PickDialog.Item("copy", "复制到游戏库", "保留原文件夹，耗时取决于体积"),
+            new PickDialog.Item("move", "移动到游戏目录", "同盘时瞬间完成，原文件夹会消失"),
+            new PickDialog.Item("copy", "复制到游戏目录", "保留原文件夹，耗时取决于体积"),
             new PickDialog.Item("link", "创建目录联接", "不占额外空间，仅在本机有效（需要管理员权限）")
         };
 
         string? mode = PickDialog.Show(Window.GetWindow(this), "添加方式",
-            $"即将把「{Path.GetFileName(folder)}」加入游戏库：\n{GameLibrary.LibraryPath}", modes, "move");
+            $"即将把「{Path.GetFileName(folder)}」加入游戏目录：\n{GameLibrary.LibraryPath}", modes, "move");
         if (mode is null) return;
 
         AddVersionMode addMode = mode switch

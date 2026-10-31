@@ -192,7 +192,7 @@
                             <ctl:PclHint Margin="0,14,0,0" Theme="Blue">
                                 <TextBlock TextWrapping="Wrap" LineHeight="19"
                                            Foreground="{StaticResource ColorBrushGray1}"
-                                           Text="你现在可以手动从 Steam 下载游戏，然后用主页左下角的「版本选择」→「添加版本文件夹」把它加入游戏库。&#x0a;判定标准：文件夹根目录下存在 Spaceflight Simulator.exe。" />
+                                           Text="你现在可以手动从 Steam 下载游戏，然后用主页左下角的「版本选择」→「添加版本文件夹」把它加入游戏目录。&#x0a;判定标准：文件夹根目录下存在 Spaceflight Simulator.exe。" />
                             </ctl:PclHint>
                             <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                                 <Button Style="{StaticResource BtnPrimary}" Content="打开 Steam 商店页"

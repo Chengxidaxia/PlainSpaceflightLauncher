@@ -21,7 +21,7 @@ public static class Paths
     /// <summary>下载缓存目录（未安装完成的临时文件）。</summary>
     public static string DownloadDir => Path.Combine(CacheDir, "Download");
 
-    /// <summary>默认的游戏库目录（.sfs）。</summary>
+    /// <summary>默认的游戏目录目录（.sfs）。</summary>
     public static string DefaultSfsDir => Path.Combine(AppDir, ".sfs");
 
     public static void EnsureCreated()

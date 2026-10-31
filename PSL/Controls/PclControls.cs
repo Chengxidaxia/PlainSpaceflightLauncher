@@ -1343,11 +1343,38 @@ public class PclResourceItem : Grid
 
         Children.Add(bottom);
 
+        // 指向动画（对应 PCL MyListItem 的 RefreshColor：指向变浅色底，100ms 淡入 / 200ms 淡出）
+        _hover = new Border
+        {
+            Background = (SolidColorBrush)FindResource("ColorBrush7"),
+            Opacity = 0,
+            IsHitTestVisible = false
+        };
+        SetColumn(_hover, 0);
+        SetColumnSpan(_hover, 99);
+        SetRow(_hover, 0);
+        SetRowSpan(_hover, 99);
+        Children.Insert(0, _hover);
+
+        MouseEnter += (_, _) => AnimateHover(1, 100);
+        MouseLeave += (_, _) => AnimateHover(0, 200);
+
         MouseLeftButtonUp += (_, e) =>
         {
             if (IsInsideIconButton(e.OriginalSource as DependencyObject)) return;
             Click?.Invoke(this, EventArgs.Empty);
         };
+    }
+
+    private readonly Border _hover;
+
+    private void AnimateHover(double to, int ms)
+    {
+        var anim = new DoubleAnimation(to, TimeSpan.FromMilliseconds(ms))
+        {
+            EasingFunction = new PclFluentEase { Power = 3 }
+        };
+        _hover.BeginAnimation(UIElement.OpacityProperty, anim);
     }
 
     private static bool IsInsideIconButton(DependencyObject? node)
@@ -1731,4 +1758,121 @@ public class PclCheckBox : Grid
             TimeSpan.FromMilliseconds(ms));
         _box.Background.BeginAnimation(SolidColorBrush.ColorProperty, anim);
     }
+}
+
+/// <summary>
+/// 圆角胶囊文字按钮（逐项照 PCL <c>Controls/MyExtraTextButton.xaml</c>）。
+/// <para>
+/// 容器高度 52、<c>Margin 20</c>；内层胶囊 <c>Background=ColorBrush3</c>、
+/// <c>CornerRadius=0.4×高度</c>（= 胶囊）、<c>DropShadowEffect BlurRadius=10 Opacity=0.2</c>；
+/// 内容 <c>StackPanel Margin="20,0"</c>：图标 <c>Fill=ColorBrush8</c>（白）、
+/// 文字 <c>FontSize=16</c> <c>Foreground=ColorBrush8</c>、<c>Margin="12,0,0,0.8"</c>。
+/// </para>
+/// </summary>
+public class PclPillButton : Grid
+{
+    private readonly Border _pill;
+    private readonly ShapePath _icon;
+    private readonly TextBlock _text;
+    private readonly ScaleTransform _scale = new(1, 1);
+
+    public PclPillButton()
+    {
+        Height = 42;
+        Margin = new Thickness(20);
+        Cursor = Cursors.Hand;
+        RenderTransformOrigin = new Point(0.5, 0.5);
+
+        _pill = new Border
+        {
+            Background = (SolidColorBrush)FindResource("ColorBrush3"),
+            CornerRadius = new CornerRadius(21),
+            BorderThickness = new Thickness(0.001),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                ShadowDepth = 0,
+                BlurRadius = 10,
+                Opacity = 0.2
+            }
+        };
+        Children.Add(_pill);
+
+        var content = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Margin = new Thickness(20, 0, 20, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            IsHitTestVisible = false,
+            RenderTransform = _scale,
+            RenderTransformOrigin = new Point(0.5, 0.5)
+        };
+
+        _icon = new ShapePath
+        {
+            Stretch = Stretch.Uniform,
+            Height = 16,
+            VerticalAlignment = VerticalAlignment.Center,
+            Fill = (SolidColorBrush)FindResource("ColorBrush8"),
+            Visibility = Visibility.Collapsed
+        };
+        content.Children.Add(_icon);
+
+        _text = new TextBlock
+        {
+            Text = "开始下载",
+            FontSize = 16,
+            Foreground = (SolidColorBrush)FindResource("ColorBrush8"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(12, 0, 0, 0.8)
+        };
+        content.Children.Add(_text);
+
+        Children.Add(content);
+
+        MouseEnter += (_, _) => Animate(1.03, 100);
+        MouseLeave += (_, _) => Animate(1.0, 160);
+        MouseLeftButtonDown += (_, _) => Animate(0.97, 80);
+        MouseLeftButtonUp += (_, e) =>
+        {
+            Animate(1.0, 120);
+            if (IsMouseOver) Animate(1.03, 120);
+            Click?.Invoke(this, EventArgs.Empty);
+            e.Handled = true;
+        };
+    }
+
+    private void Animate(double to, int ms)
+    {
+        var anim = new DoubleAnimation(to, TimeSpan.FromMilliseconds(ms))
+        {
+            EasingFunction = new PclFluentEase { Power = 3 }
+        };
+        _scale.BeginAnimation(ScaleTransform.ScaleXProperty, anim);
+        _scale.BeginAnimation(ScaleTransform.ScaleYProperty, anim.Clone());
+    }
+
+    /// <summary>按钮文字。</summary>
+    public string Text
+    {
+        get => _text.Text;
+        set => _text.Text = value ?? string.Empty;
+    }
+
+    /// <summary>左侧矢量图标（白色）；不设置则不占位。</summary>
+    public Geometry? Logo
+    {
+        get => _icon.Data;
+        set
+        {
+            _icon.Data = value;
+            _icon.Visibility = value is null ? Visibility.Collapsed : Visibility.Visible;
+            _text.Margin = value is null
+                ? new Thickness(0, 0, 0, 0.8)
+                : new Thickness(12, 0, 0, 0.8);
+        }
+    }
+
+    /// <summary>点击事件。</summary>
+    public event EventHandler? Click;
 }

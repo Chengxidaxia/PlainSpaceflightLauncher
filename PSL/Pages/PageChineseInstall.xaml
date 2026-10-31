@@ -38,7 +38,7 @@
                     <ctl:PclHint x:Name="HintInfo" Theme="Blue" Margin="0,0,0,15">
                         <TextBlock x:Name="TxtHint" TextWrapping="Wrap" LineHeight="19"
                                    Foreground="{StaticResource ColorBrushGray1}"
-                                   Text="安装位置：游戏库根目录下的同名文件夹。" />
+                                   Text="安装位置：游戏目录根目录下的同名文件夹。" />
                     </ctl:PclHint>
 
                     <ctl:PclCard Margin="0,0,0,15" Title="版本信息">
@@ -78,9 +78,12 @@
                         </StackPanel>
                     </ctl:PclCard>
 
-                    <Button x:Name="BtnStart" Style="{StaticResource BtnPrimary}" Content="开始下载"
-                            Height="36" MinWidth="180" HorizontalAlignment="Center" Margin="0,10,0,0"
-                            Click="BtnStart_Click" />
+                    <!-- 照 PCL PageDownloadInstall.xaml:161 的 BtnStart：
+                         MyExtraTextButton（蓝色胶囊 + 下载图标 + 16px 白字），底部居中 -->
+                    <ctl:PclPillButton x:Name="BtnStart" Text="开始下载"
+                                       Logo="{StaticResource IconDownload}"
+                                       HorizontalAlignment="Center" Margin="0,10,0,10"
+                                       Click="BtnStart_Click" />
                 </StackPanel>
             </ScrollViewer>
         </Grid>

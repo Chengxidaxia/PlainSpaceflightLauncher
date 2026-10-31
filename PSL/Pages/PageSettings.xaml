@@ -42,7 +42,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="游戏库目录" VerticalAlignment="Center" />
+                                    <TextBlock Text="游戏目录目录" VerticalAlignment="Center" />
                                     <TextBox x:Name="TxtLibrary" Grid.Column="1" IsReadOnly="True"
                                              ToolTip="存放各个 SFS 版本文件夹的目录（.sfs）" />
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">

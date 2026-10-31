@@ -155,7 +155,12 @@ public static class ChineseRepo
                 });
             }
 
-            list.Sort((a, b) => b.PublishedAt.CompareTo(a.PublishedAt));
+            // 按版本号降序（版本号取自 Release 名称，如 1.6.0）；解析不出来的排后面
+            list.Sort((a, b) =>
+            {
+                int cmp = CompareVersion(b.DisplayName, a.DisplayName);
+                return cmp != 0 ? cmp : b.PublishedAt.CompareTo(a.PublishedAt);
+            });
             return list;
         }
         catch (Exception ex)
@@ -163,6 +168,36 @@ public static class ChineseRepo
             Log.Error("解析汉化版 Release 列表失败", ex);
             return null;
         }
+    }
+
+
+    /// <summary>比较两个版本号字符串（1.6.0 &gt; 1.5.10），不是版本号的按文本比较。</summary>
+    private static int CompareVersion(string left, string right)
+    {
+        static int[] Parts(string text)
+        {
+            var numbers = new List<int>();
+            foreach (string piece in (text ?? "").Split('.'))
+            {
+                int value = 0;
+                foreach (char c in piece)
+                {
+                    if (c < '0' || c > '9') break;
+                    value = value * 10 + (c - '0');
+                }
+                numbers.Add(value);
+            }
+            return numbers.ToArray();
+        }
+
+        int[] a = Parts(left);
+        int[] b = Parts(right);
+        int count = Math.Min(a.Length, b.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (a[i] != b[i]) return a[i].CompareTo(b[i]);
+        }
+        return a.Length.CompareTo(b.Length);
     }
 
     private static string Str(JsonElement obj, string name)

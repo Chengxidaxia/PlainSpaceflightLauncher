@@ -56,7 +56,7 @@ public partial class PageInstance : PclPage, IPageRefresh
         GameVersion? current = GameLibrary.Current;
         TxtVersionName.Text = current is null ? "还没有可用的版本" : current.DisplayName;
         TxtVersionPath.Text = current is null
-            ? "游戏库：" + GameLibrary.LibraryPath
+            ? "游戏目录：" + GameLibrary.LibraryPath
             : current.FolderPath;
 
         // 设置页的开关状态
@@ -189,7 +189,7 @@ public partial class PageInstance : PclPage, IPageRefresh
         GameVersion? version = GameLibrary.Current;
         if (version is null)
         {
-            ShowEmpty("尚未添加版本", "请先在主页点「版本选择」把 SFS 游戏文件夹加入游戏库。");
+            ShowEmpty("尚未添加版本", "请先在主页点「版本选择」把 SFS 游戏文件夹加入游戏目录。");
             CardResource.Title = KindName(CurrentKind);
             return;
         }
@@ -552,7 +552,7 @@ public partial class PageInstance : PclPage, IPageRefresh
 
         MessageBoxResult confirm = MessageBox.Show(
             Window.GetWindow(this),
-            $"确定要把「{version.DisplayName}」从游戏库移除吗？\n\n{version.FolderPath}\n\n" +
+            $"确定要把「{version.DisplayName}」从游戏目录移除吗？\n\n{version.FolderPath}\n\n" +
             "该文件夹会被移动到系统回收站（可从回收站恢复）。",
             "移除版本",
             MessageBoxButton.OKCancel,

@@ -84,12 +84,12 @@ public partial class PageSettings : PclPage, IPageRefresh
     private void ChangeLibrary_Click(object sender, RoutedEventArgs e)
     {
         string current = PslConfig.Current.SfsDirectory;
-        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择游戏库目录（.sfs）", current);
+        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择游戏目录目录（.sfs）", current);
         if (picked is null) return;
 
         GameLibrary.SetLibraryPath(picked);
         Reload();
-        MainWindow.Toast($"游戏库已切换到：{picked}");
+        MainWindow.Toast($"游戏目录已切换到：{picked}");
     }
 
     private void OpenLibrary_Click(object sender, RoutedEventArgs e)

@@ -10,7 +10,7 @@ Spaceflight Simulator 的第三方启动器。界面风格参考自 [Plain Craft
 
 | 模块 | 说明 |
 | --- | --- |
-| 版本选择 | **左栏选游戏文件夹、右栏选版本**。游戏库（`.sfs`）根目录本身即一个文件夹，也可以用「添加大版本文件夹」把别的父目录加进左栏（只登记路径、不动文件）；每个文件夹下「根目录含 `Spaceflight Simulator.exe`」的直接子文件夹即一个版本。点右栏的版本即选中并返回。从主页左栏的「版本选择」按钮进入 |
+| 版本选择 | **左栏选游戏文件夹、右栏选版本**。游戏目录（`.sfs`）根目录本身即一个文件夹，也可以用「添加大版本文件夹」把别的父目录加进左栏（只登记路径、不动文件）；每个文件夹下「根目录含 `Spaceflight Simulator.exe`」的直接子文件夹即一个版本。点右栏的版本即选中并返回。从主页左栏的「版本选择」按钮进入 |
 | 启动游戏 | 直接启动版本目录下的 `Spaceflight Simulator.exe` |
 | 模组 | DLL 模组管理（`Mods\<模组名>\`），支持拖动 `.dll` 进窗口一键安装、启用 / 禁用、卸载 |
 | 涂装包 | `Mods\Custom_Assets\Texture Packs\` |
@@ -18,7 +18,7 @@ Spaceflight Simulator 的第三方启动器。界面风格参考自 [Plain Craft
 | 星系包 | `Spaceflight Simulator_Data\Custom Solar Systems\` |
 | 蓝图 | `Saving\Blueprints\` |
 | 下载 | 数据源可在 **SFS 汉化模组站**（sfszhmod.pages.dev）与 **SFS 中文模组站**（sfscnmod.7813.cc.cd）之间切换，两者数据结构一致；提供 DLL 模组 / 涂装包 / 零件包 / 蓝图，有直链时多线程分段下载，没有直链时用浏览器打开蓝奏云。游戏本体下载为 WIP 占位 |
-| 设置 | 游戏库目录、下载线程数、下载方式、数据源、汉化版功能开关、关于、日志 |
+| 设置 | 游戏目录目录、下载线程数、下载方式、数据源、汉化版功能开关、关于、日志 |
 | 友站 | 顶栏「友站」内置浏览器，可切换 SFS 工具站 / 涂装包制作器 / 星系包生成器 / 涂装包 / 整合包编辑器 |
 
 ### 与 PCL2 的差异
@@ -27,7 +27,7 @@ Spaceflight Simulator 的第三方启动器。界面风格参考自 [Plain Craft
 
 - 去掉所有与 Minecraft 强绑定的功能（Java 版本、Forge/Fabric、正版登录、皮肤等）
 - `.minecraft` → `.sfs`
-- 版本定位：不再使用 `versions\<版本>` 结构，直接在游戏库根目录下识别版本文件夹
+- 版本定位：不再使用 `versions\<版本>` 结构，直接在游戏目录根目录下识别版本文件夹
 - 账号登录：UI 入口隐藏
 - 帮助页：WIP
 - 下载页的「游戏本体下载」：WIP
@@ -88,7 +88,7 @@ PlainSpaceflightLauncher/
 │  ├─ config.json           配置
 │  ├─ Log/                  日志
 │  └─ Cache/                数据缓存与下载临时文件
-└─ .sfs/                    默认游戏库目录（可在设置里更改）
+└─ .sfs/                    默认游戏目录目录（可在设置里更改）
 ```
 
 ## 开源协议
