@@ -122,8 +122,7 @@ public partial class PageSelect : PclPage, IPageRefresh
             MinPaddingRight = 30,
             Cursor = Cursors.Hand,
             Title = "添加已有文件夹",
-            LogoScale = 0.9,
-            Logo = TryFindResource("IconAddFolder") as Geometry,
+            Logo = TryFindResource("IconAddCircle") as Geometry,
             ToolTip = "将一个已有的游戏文件夹添加到列表；直接选一个版本文件夹也可以"
         };
         addFolder.Click += (_, _) => AddFolder();
