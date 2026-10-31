@@ -1,22 +1,8 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualBasic.FileIO;
-using SearchOption = System.IO.SearchOption;
 
 namespace PSL.Core;
-
-/// <summary>把版本文件夹加入游戏目录时的方式。</summary>
-public enum AddVersionMode
-{
-    /// <summary>移动到 .sfs 下（同盘秒完成）。</summary>
-    Move,
-
-    /// <summary>复制到 .sfs 下。</summary>
-    Copy,
-
-    /// <summary>在 .sfs 下创建目录联接（junction，不占额外空间）。</summary>
-    Link
-}
 
 /// <summary>版本扫描 / 添加 / 删除 / 启动。</summary>
 public static class VersionManager
@@ -27,16 +13,41 @@ public static class VersionManager
     /// <summary>SFS 的 Steam 商店页。</summary>
     public const string SteamStoreUrl = "https://store.steampowered.com/app/" + SteamAppId;
 
-    /// <summary>扫描 .sfs 下的直接子文件夹，返回所有合法版本（按名称排序）。</summary>
-    public static List<GameVersion> Scan(string? sfsDir = null)
+    /// <summary>
+    /// 扫描一个游戏文件夹下的所有合法版本（按名称排序）。
+    /// <para>
+    /// 默认只认**直接子文件夹**；<paramref name="includeSelf"/> 为 true 时，
+    /// 若该文件夹根目录本身就含 SFS 启动文件（即它自己就是一个版本），也把它算进去。
+    /// 这条规则是「添加单个版本 → 抽象成一个只含该版本的游戏文件夹」能成立的前提：
+    /// SFS 没有 <c>versions\</c> 这一层，玩家常见做法是直接把某个版本放在
+    /// <c>K:\SFS1.6\</c> 这种目录里，此时该目录既当文件夹也当版本。
+    /// </para>
+    /// </summary>
+    public static List<GameVersion> Scan(string? sfsDir = null, bool includeSelf = false)
     {
         sfsDir ??= PslConfig.Current.SfsDirectory;
         var list = new List<GameVersion>();
 
         if (!Directory.Exists(sfsDir))
         {
-            Log.Warn($"游戏目录目录不存在：{sfsDir}");
+            Log.Warn($"游戏目录不存在：{sfsDir}");
             return list;
+        }
+
+        // 文件夹自身就是一个版本（PCL 里不可能出现，SFS 里很常见）
+        if (includeSelf && GameVersion.IsGameFolder(sfsDir))
+        {
+            try
+            {
+                list.Add(new GameVersion(GameFolder.Normalize(sfsDir))
+                {
+                    DisplayName = PslConfig.Current.GetVersionName(sfsDir)
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"读取版本失败：{sfsDir}", ex);
+            }
         }
 
         IEnumerable<string> subDirs;
@@ -86,7 +97,7 @@ public static class VersionManager
 
         foreach (string folder in folders)
         {
-            foreach (GameVersion version in Scan(folder))
+            foreach (GameVersion version in Scan(folder, includeSelf: true))
             {
                 if (seen.Add(GameFolder.Normalize(version.FolderPath))) list.Add(version);
             }
@@ -95,80 +106,58 @@ public static class VersionManager
         return list;
     }
 
-    /// <summary>校验一个文件夹是否可作为版本加入游戏目录，返回失败原因。</summary>
-    public static bool Validate(string folder, out string error)
+    /// <summary>
+    /// 把用户在文件夹对话框里选中的目录，整理成版本选择页左栏的一个「游戏文件夹」。
+    /// <para>
+    /// 对应 PCL <c>PageSelectLeft.xaml.vb:182-190</c> 的「检查实际的 Minecraft 文件夹位置」：
+    /// PCL 选到不含 <c>versions\</c> 的目录时，会往子目录里找一个真正含 <c>versions\</c> 的。
+    /// SFS 没有 <c>versions\</c> 这一层，判定改成「根目录含 <c>Spaceflight Simulator.exe</c>」，
+    /// 于是只剩两种情况，都不需要动任何文件、只登记路径：
+    /// </para>
+    /// <list type="number">
+    /// <item>选中的目录<b>下面</b>有版本（装着多个版本的父目录）→ 它自己就是一个游戏文件夹；</item>
+    /// <item>选中的目录<b>本身</b>就是一个版本（如 <c>K://SFS1.6</c>）→ 抽象成一个只含该版本的游戏文件夹。</item>
+    /// </list>
+    /// 两者都不是时返回 <see langword="null"/>，由 <paramref name="message"/> 说明原因。
+    /// </summary>
+    public static string? ResolveGameFolder(string picked, out string message)
     {
-        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        string dir = GameFolder.Normalize(picked);
+
+        if (!Directory.Exists(dir))
         {
-            error = "文件夹不存在。";
-            return false;
+            message = $"文件夹不存在：{dir}";
+            return null;
         }
 
-        if (!GameVersion.IsGameFolder(folder))
+        // 1) 它下面装着版本 → 直接当游戏文件夹
+        List<string> subs = ScanSubVersionFolders(dir);
+        if (subs.Count > 0)
         {
-            error = $"该文件夹根目录没有找到 {GameVersion.GameExeName}，不是一个 SFS 版本文件夹。";
-            return false;
+            message = subs.Count == 1
+                ? $"「{GameFolder.DefaultName(dir)}」下有 1 个版本。"
+                : $"「{GameFolder.DefaultName(dir)}」下有 {subs.Count} 个版本。";
+            return dir;
         }
 
-        if (!Directory.Exists(Path.Combine(folder, GameVersion.DataDirName)))
+        // 2) 它本身就是一个版本 → 抽象成只含它一个的游戏文件夹
+        if (GameVersion.IsGameFolder(dir))
         {
-            error = $"警告：未找到 {GameVersion.DataDirName}，可能不是完整的游戏本体。";
-            return false;
+            message = $"「{GameFolder.DefaultName(dir)}」本身就是一个版本，已作为只含该版本的文件夹加入。";
+            return dir;
         }
 
-        error = "";
-        return true;
-    }
-
-    /// <summary>把一个版本文件夹加入游戏目录。</summary>
-    public static GameVersion Add(string sourceFolder, AddVersionMode mode, string? sfsDir = null)
-    {
-        sfsDir ??= PslConfig.Current.SfsDirectory;
-        sourceFolder = Path.GetFullPath(sourceFolder).TrimEnd(Path.DirectorySeparatorChar);
-        Directory.CreateDirectory(sfsDir);
-
-        string folderName = Path.GetFileName(sourceFolder);
-        string target = Path.Combine(sfsDir, folderName);
-
-        // 已经在游戏目录里了
-        if (string.Equals(Path.GetFullPath(target), sourceFolder, StringComparison.OrdinalIgnoreCase))
-            return new GameVersion(sourceFolder);
-
-        target = MakeUniquePath(target);
-
-        switch (mode)
-        {
-            case AddVersionMode.Move:
-                try
-                {
-                    Directory.Move(sourceFolder, target);
-                }
-                catch (IOException)
-                {
-                    // 跨盘移动会抛异常 → 退化为复制
-                    Log.Warn("跨盘移动失败，退化为复制");
-                    CopyDirectory(sourceFolder, target);
-                }
-                break;
-
-            case AddVersionMode.Copy:
-                CopyDirectory(sourceFolder, target);
-                break;
-
-            case AddVersionMode.Link:
-                CreateJunction(target, sourceFolder);
-                break;
-        }
-
-        Log.Info($"已添加版本：{target}（{mode}）");
-        return new GameVersion(target);
+        message = $"在「{dir}」里没有找到任何 SFS 版本。\n\n" +
+                  $"判定标准：该文件夹、或它的直接子文件夹的根目录下存在 {GameVersion.GameExeName}。\n" +
+                  "只识别一层，不会递归更深层。";
+        return null;
     }
 
     /// <summary>
     /// 扫描一个「大版本文件夹」的**直接子文件夹**，返回其中所有合法的 SFS 版本目录。
     /// 判定标准与 <see cref="Scan"/> 完全一致：子文件夹根目录存在 SFS 启动文件即为一个版本
     /// （不递归更深层，也不看 Pck 之类的内部目录）。
-    /// 用于「添加大版本文件夹」——一个父文件夹里同时放着好几个版本的情况。
+    /// 用于「添加已有文件夹」——一个父文件夹里同时放着好几个版本的情况。
     /// </summary>
     public static List<string> ScanSubVersionFolders(string parentFolder)
     {
@@ -257,46 +246,5 @@ public static class VersionManager
             Arguments = $"\"{path}\"",
             UseShellExecute = true
         });
-    }
-
-    // ---------- 内部工具 ----------
-
-    private static string MakeUniquePath(string path)
-    {
-        if (!Directory.Exists(path) && !File.Exists(path)) return path;
-        for (int i = 1; i < 1000; i++)
-        {
-            string candidate = $"{path} ({i})";
-            if (!Directory.Exists(candidate) && !File.Exists(candidate)) return candidate;
-        }
-
-        throw new IOException("目标已存在，且无法生成唯一名称。");
-    }
-
-    private static void CopyDirectory(string source, string target)
-    {
-        Directory.CreateDirectory(target);
-        foreach (string dir in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
-            Directory.CreateDirectory(dir.Replace(source, target));
-
-        foreach (string file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
-            File.Copy(file, file.Replace(source, target), true);
-    }
-
-    private static void CreateJunction(string linkPath, string targetPath)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "cmd.exe",
-            Arguments = $"/c mklink /J \"{linkPath}\" \"{targetPath}\"",
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
-        using Process? p = Process.Start(psi);
-        p?.WaitForExit();
-        if (p is null || p.ExitCode != 0 || !Directory.Exists(linkPath))
-            throw new IOException("创建目录联接失败（可能需要管理员权限，或目标已存在）。");
     }
 }

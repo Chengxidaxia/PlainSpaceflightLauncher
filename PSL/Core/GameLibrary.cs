@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 
 namespace PSL.Core;
 
@@ -12,7 +12,7 @@ public static class GameLibrary
     public static IReadOnlyList<GameVersion> Versions => _versions;
 
     /// <summary>
-    /// 所有游戏文件夹（第 0 项恒为游戏目录根目录，其后是「添加大版本文件夹」加进来的）。
+    /// 所有游戏文件夹（第 0 项恒为游戏目录根目录，其后是用「添加已有文件夹」加进来的）。
     /// 对应 PCL 的 <c>McFolderList</c>。
     /// </summary>
     public static IReadOnlyList<GameFolder> Folders => _folders;
@@ -95,17 +95,23 @@ public static class GameLibrary
         Changed?.Invoke();
     }
 
-    /// <summary>取某个游戏文件夹下的所有版本。</summary>
+    /// <summary>
+    /// 取某个游戏文件夹下的所有版本：它的直接子文件夹里的版本，
+    /// 外加① 它自己（SFS 里 <c>K:\SFS1.6</c> 这种「文件夹本身就是版本」的布局很常见）。
+    /// </summary>
     public static List<GameVersion> VersionsOf(GameFolder? folder)
         => folder is null
             ? new List<GameVersion>()
-            : _versions.Where(v => IsDirectChildOf(v.FolderPath, folder.Path)).ToList();
+            : _versions.Where(v => BelongsTo(v.FolderPath, folder.Path)).ToList();
 
-    /// <summary>取某个版本所属的游戏文件夹。</summary>
+    /// <summary>取某个版本所属的游戏文件夹（先按同路径精确匹配，再按直接子目录匹配）。</summary>
     public static GameFolder? FolderOf(GameVersion? version)
-        => version is null
-            ? null
-            : _folders.FirstOrDefault(f => IsDirectChildOf(version.FolderPath, f.Path));
+    {
+        if (version is null) return null;
+        string path = GameFolder.Normalize(version.FolderPath);
+        return _folders.FirstOrDefault(f => PathEquals(f.Path, path))
+               ?? _folders.FirstOrDefault(f => IsDirectChildOf(path, f.Path));
+    }
 
     /// <summary>
     /// 把一个已有的文件夹加进左栏列表（对应 PCL <c>PageSelectLeft.xaml.vb:168-245</c> 的
@@ -139,8 +145,7 @@ public static class GameLibrary
     }
 
     /// <summary>把某个游戏文件夹从左栏列表移除（游戏目录根目录不允许移除）。</summary>
-    public static bool RemoveFolder(GameFolder folder)
-    {
+    public static bool RemoveFolder(GameFolder folder)    {
         if (folder.IsLibrary) return false;
 
         int removed = PslConfig.Current.ExtraFolders
@@ -150,6 +155,26 @@ public static class GameLibrary
         PslConfig.Current.Save();
         Refresh();
         return true;
+    }
+
+    /// <summary>
+    /// 把一个版本删到回收站并刷新列表。
+    /// <para>
+    /// 被删的目录如果本身就是左栏里的某个游戏文件夹（SFS 常见的 <c>K:\SFS1.6</c> 布局：
+    /// 文件夹自身即版本），要同时把那条文件夹登记一并移除，
+    /// 否则左栏会留下一个指向已不存在目录、右栏永远空着的条目。
+    /// </para>
+    /// </summary>
+    public static void RemoveVersion(GameVersion version)
+    {
+        VersionManager.RemoveToRecycleBin(version);
+
+        string path = GameFolder.Normalize(version.FolderPath);
+        if (!PathEquals(path, LibraryPath) &&
+            PslConfig.Current.ExtraFolders.RemoveAll(e => PathEquals(e.Path, path)) > 0)
+            PslConfig.Current.Save();
+
+        Refresh();
     }
 
     /// <summary>
@@ -198,4 +223,8 @@ public static class GameLibrary
         string? parent = Path.GetDirectoryName(GameFolder.Normalize(childPath));
         return parent is not null && PathEquals(parent, parentPath);
     }
+
+    /// <summary>版本是否属于某个游戏文件夹：同路径（文件夹自身即版本），或是它的直接子目录。</summary>
+    private static bool BelongsTo(string versionPath, string folderPath)
+        => PathEquals(versionPath, folderPath) || IsDirectChildOf(versionPath, folderPath);
 }

@@ -153,10 +153,10 @@
 
                     <ctl:PclCard Margin="0,0,0,15" Title="快速操作">
                         <WrapPanel Margin="25,40,25,20">
-                            <Button Style="{StaticResource BtnBase}" Content="添加版本文件夹" Height="35"
+                            <Button Style="{StaticResource BtnBase}" Content="添加已有文件夹" Height="35"
                                     MinWidth="140" Padding="13,0" Margin="0,0,20,8"
-                                    Click="BtnAddVersion_Click" />
-                            <Button Style="{StaticResource BtnBase}" Content="打开游戏目录目录" Height="35"
+                                    Click="BtnAddFolder_Click" />
+                            <Button Style="{StaticResource BtnBase}" Content="打开游戏目录" Height="35"
                                     MinWidth="140" Padding="13,0" Margin="0,0,20,8"
                                     Click="BtnOpenLibrary_Click" />
                             <Button Style="{StaticResource BtnBase}" Content="重新扫描" Height="35"

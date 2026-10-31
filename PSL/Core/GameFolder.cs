@@ -4,10 +4,13 @@ namespace PSL.Core;
 
 /// <summary>
 /// 版本选择页左栏里的一个「游戏文件夹」，对应 PCL 的 <c>McFolder</c>。
-/// 它的**直接子文件夹**中、根目录含 SFS 启动文件的那些，各自是一个版本。
+/// 它的**直接子文件夹**中、根目录含 SFS 启动文件的那些，各自是一个版本；
+/// 它**自己**的根目录含 SFS 启动文件时，它自己也算一个版本
+/// （SFS 没有 <c>versions\</c> 那一层，玩家常把某个版本直接放在 <c>K:\SFS1.6</c> 这种目录里，
+/// 于是「添加单个版本」就等于添加一个只含该版本的文件夹）。
 /// <para>
-/// 游戏目录根目录（<see cref="GameLibrary.LibraryPath"/>）本身即一个文件夹
-/// （对应 PCL 的 <c>McFolder.Types.Vanilla</c>，「添加大版本文件夹」加进来的额外父目录
+/// 游戏目录（<see cref="GameLibrary.LibraryPath"/>）本身即一个文件夹
+/// （对应 PCL 的 <c>McFolder.Types.Vanilla</c>，用户添加的额外文件夹
 /// 对应 <c>McFolder.Types.Custom</c>）。
 /// </para>
 /// </summary>
@@ -34,8 +37,10 @@ public sealed class GameFolder
     /// <summary>目录是否真的存在。</summary>
     public bool Exists => Directory.Exists(Path);
 
-    /// <summary>该文件夹下的所有版本（只认直接子文件夹，不递归）。</summary>
-    public List<GameVersion> EnumerateVersions() => VersionManager.Scan(Path);
+    /// <summary>
+    /// 该文件夹下的所有版本：直接子文件夹里的，外加它自己（若它本身就是个版本）。
+    /// </summary>
+    public List<GameVersion> EnumerateVersions() => VersionManager.Scan(Path, includeSelf: true);
 
     /// <summary>
     /// 默认显示名。照 PCL <c>PageSelectLeft.xaml.vb:153-155</c> 的取名规则：

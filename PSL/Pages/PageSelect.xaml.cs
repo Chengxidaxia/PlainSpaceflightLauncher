@@ -1,9 +1,7 @@
-using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Microsoft.Win32;
 using PSL.Controls;
 using PSL.Core;
 
@@ -68,8 +66,7 @@ public partial class PageSelect : PclPage, IPageRefresh
     ///   MinPaddingRight=30, Title=名称, Info=路径 }</c>（<c>:75</c>）
     ///   外加一个 <c>MyIconButton{ Logo=IconButtonSetup, LogoScale=1.1 }</c>（<c>:77-82</c>）</item>
     /// <item>标题「添加或导入」（<c>:88</c>）</item>
-    /// <item>添加项：<c>MyListItem{ Type=Clickable, Height=34 }</c>（<c>:92-111</c>）</item>
-    /// <item>末尾一个 10px 的占位（<c>:115</c>）</item>
+    /// <item>添加项：<c>MyListItem{ Type=Clickable, Height=34 }</c>（<c>:92-111</c>）</item>    /// <item>末尾一个 10px 的占位（<c>:115</c>）</item>
     /// </list>
     /// PCL 的齿轮按钮弹的是「重命名 / 打开 / 刷新 / 删除」右键菜单（<c>:36-73</c>）；
     /// PSL 用同风格的选项对话框表达同样的四个操作。
@@ -115,35 +112,22 @@ public partial class PageSelect : PclPage, IPageRefresh
 
         PanList.Children.Add(SectionTitle("添加或导入"));
 
-        // 「添加大版本文件夹」：选一个装着多个版本的父目录，只登记进列表（不动文件）
-        var addBig = new PclListItem
+        // 「添加已有文件夹」：照 PCL `PageSelectLeft.xaml.vb:100-105` 的 ItemAdd
+        // （Title / Height=34 / Type=Clickable / ToolTip）。
+        // 选中的目录本身就是一个版本时，会被抽象成一个只含该版本的文件夹（见 GameFolderAdder）。
+        var addFolder = new PclListItem
         {
             Type = PclListItem.CheckType.Clickable,
             Height = 34,
             MinPaddingRight = 30,
             Cursor = Cursors.Hand,
-            Title = "添加大版本文件夹",
+            Title = "添加已有文件夹",
             LogoScale = 0.9,
             Logo = TryFindResource("IconAddFolder") as Geometry,
-            ToolTip = "选择一个装着多个 SFS 版本的文件夹，只识别它的直接子文件夹"
+            ToolTip = "将一个已有的游戏文件夹添加到列表；直接选一个版本文件夹也可以"
         };
-        addBig.Click += (_, _) => AddBigVersionFolder();
-        PanList.Children.Add(addBig);
-
-        // 「添加版本文件夹」：选一个本身就是版本的目录，导入游戏目录（移动 / 复制 / 目录联接）
-        var addOne = new PclListItem
-        {
-            Type = PclListItem.CheckType.Clickable,
-            Height = 34,
-            MinPaddingRight = 30,
-            Cursor = Cursors.Hand,
-            Title = "添加版本文件夹",
-            LogoScale = 0.9,
-            Logo = TryFindResource("IconAddCircle") as Geometry,
-            ToolTip = "选择一个本身就是 SFS 版本的文件夹，导入游戏目录"
-        };
-        addOne.Click += (_, _) => AddVersionFolder();
-        PanList.Children.Add(addOne);
+        addFolder.Click += (_, _) => AddFolder();
+        PanList.Children.Add(addFolder);
 
         PanList.Children.Add(new FrameworkElement { Height = 10, IsHitTestVisible = false });
     }
@@ -254,9 +238,9 @@ public partial class PageSelect : PclPage, IPageRefresh
             LabEmptyTitle.Text = "无可用版本";
             LabEmptyContent.Text = folder is null
                 ? "没有找到任何游戏文件夹。"
-                : $"在「{folder.Name}」的直接子文件夹里没有找到任何 SFS 版本。\n\n" +
-                  $"判定标准：子文件夹的根目录下存在 {GameVersion.GameExeName}。\n" +
-                  "只识别第一层子文件夹，不会递归更深层。";
+                : $"在「{folder.Name}」里没有找到任何 SFS 版本。\n\n" +
+                  $"判定标准：「{folder.Name}」本身、或它的直接子文件夹的根目录下存在 {GameVersion.GameExeName}。\n" +
+                  "只识别一层，不会递归更深层。";
             return;
         }
 
@@ -344,11 +328,7 @@ public partial class PageSelect : PclPage, IPageRefresh
 
         try
         {
-            IgnoreLibraryChanged(() =>
-            {
-                VersionManager.RemoveToRecycleBin(version);
-                GameLibrary.Refresh();
-            });
+            IgnoreLibraryChanged(() => GameLibrary.RemoveVersion(version));
             Reload();
             MainWindow.Toast($"已移除版本「{version.DisplayName}」（可在回收站恢复）");
         }
@@ -362,99 +342,21 @@ public partial class PageSelect : PclPage, IPageRefresh
 
     // ==================== 添加 ====================
 
-    private void BtnEmptyAdd_Click(object sender, RoutedEventArgs e) => AddVersionFolder();
+    private void BtnEmptyAdd_Click(object sender, RoutedEventArgs e) => AddFolder();
 
     /// <summary>
-    /// 「添加大版本文件夹」：选一个父文件夹，只把它的**直接子文件夹**中根目录含
-    /// <c>Spaceflight Simulator.exe</c> 的那些各作为一个版本；文件夹本身只登记进左栏列表，
-    /// 不会移动任何文件（对应 PCL「添加已有文件夹」的做法）。
+    /// 「添加已有文件夹」：照 PCL <c>PageSelectLeft.xaml.vb:140-164</c> 的 <c>Add_Click</c>，
+    /// 选一个目录、填显示名、登记进左栏列表。
+    /// <para>
+    /// 它既能加「装着多个版本的父目录」，也能直接加「本身就是版本的文件夹」——
+    /// 后者会被抽象成一个只含该版本的游戏文件夹（SFS 没有 <c>versions\</c> 那一层，
+    /// 玩家的版本目录通常就叫 <c>K://SFS1.6</c>）。整个过程只登记路径，**不动任何文件**，
+    /// 不再有「移动到游戏目录 / 复制 / 创建目录联接」那套自创的导入方式。
+    /// </para>
     /// </summary>
-    private void AddBigVersionFolder()
+    private void AddFolder()
     {
-        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择装着多个 SFS 版本的文件夹（只识别它的直接子文件夹）");
-        if (picked is null) return;
-
-        string parent = GameFolder.Normalize(picked);
-
-        // 已在列表里：直接切过去
-        GameFolder? exists = GameLibrary.Folders.FirstOrDefault(f => GameLibrary.PathEquals(f.Path, parent));
-        if (exists is not null)
-        {
-            SwitchFolder(exists);
-            MainWindow.Toast($"「{exists.Name}」已经在列表里了");
-            return;
-        }
-
-        List<string> subs = VersionManager.ScanSubVersionFolders(parent);
-        if (subs.Count == 0)
-        {
-            MessageBox.Show(Window.GetWindow(this),
-                $"在「{parent}」的直接子文件夹里没有找到任何 SFS 版本。\n\n" +
-                $"判定标准：子文件夹的根目录下存在 {GameVersion.GameExeName}。\n" +
-                "只识别第一层子文件夹，不会递归更深层。",
-                "没有找到版本", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        IgnoreLibraryChanged(() => GameLibrary.AddFolder(parent));
+        if (GameFolderAdder.Run(Window.GetWindow(this)) is null) return;
         Reload();
-        MainWindow.Toast($"已添加文件夹「{GameFolder.DefaultName(parent)}」，识别到 {subs.Count} 个版本");
-    }
-
-    /// <summary>「添加版本文件夹」：把一个本身就是版本的文件夹导入游戏目录（移动 / 复制 / 目录联接）。</summary>
-    private void AddVersionFolder()
-    {
-        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）");
-        if (picked is null) return;
-
-        string folder = picked;
-        if (!VersionManager.Validate(folder, out string error))
-        {
-            MessageBox.Show(Window.GetWindow(this), error, "无法添加这个文件夹",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        var modes = new[]
-        {
-            new PickDialog.Item("move", "移动到游戏目录", "同盘时瞬间完成，原文件夹会消失"),
-            new PickDialog.Item("copy", "复制到游戏目录", "保留原文件夹，耗时取决于体积"),
-            new PickDialog.Item("link", "创建目录联接", "不占额外空间，仅在本机有效（需要管理员权限）")
-        };
-
-        string? mode = PickDialog.Show(Window.GetWindow(this), "添加方式",
-            $"即将把「{Path.GetFileName(folder)}」加入游戏目录：\n{GameLibrary.LibraryPath}", modes, "move");
-        if (mode is null) return;
-
-        AddVersionMode addMode = mode switch
-        {
-            "copy" => AddVersionMode.Copy,
-            "link" => AddVersionMode.Link,
-            _ => AddVersionMode.Move
-        };
-
-        try
-        {
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            GameVersion added = VersionManager.Add(folder, addMode);
-
-            IgnoreLibraryChanged(() =>
-            {
-                GameLibrary.Refresh();
-                GameLibrary.Select(GameLibrary.Find(added.FolderPath));
-            });
-            Reload();
-            MainWindow.Toast($"已添加版本「{added.DisplayName}」");
-        }
-        catch (Exception ex)
-        {
-            Log.Error("添加版本失败", ex);
-            MessageBox.Show(Window.GetWindow(this), $"添加失败：{ex.Message}", "PlainSpaceflightLauncher",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        finally
-        {
-            Mouse.OverrideCursor = null;
-        }
     }
 }

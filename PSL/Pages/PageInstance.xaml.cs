@@ -563,8 +563,7 @@ public partial class PageInstance : PclPage, IPageRefresh
 
         try
         {
-            VersionManager.RemoveToRecycleBin(version);
-            GameLibrary.Refresh();
+            GameLibrary.RemoveVersion(version);
             Reload();
             MainWindow.Toast($"已移除版本「{version.DisplayName}」（可在回收站恢复）");
         }

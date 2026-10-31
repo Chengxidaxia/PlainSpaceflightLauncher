@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -149,56 +149,15 @@ public partial class PageHome : PclPage, IPageRefresh
         MainWindow.Instance?.Navigate("instance");
     }
 
-    private void BtnAddVersion_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// 「添加已有文件夹」：与版本选择页左栏的添加项完全同一套流程
+    /// （<see cref="GameFolderAdder.Run"/>），只登记路径、不动文件；
+    /// 选中的目录本身就是版本时会被抽象成一个只含该版本的游戏文件夹。
+    /// </summary>
+    private void BtnAddFolder_Click(object sender, RoutedEventArgs e)
     {
-        string? picked = FolderPicker.Pick(Window.GetWindow(this), "选择 SFS 版本文件夹（根目录需含 Spaceflight Simulator.exe）");
-        if (picked is null) return;
-
-        string folder = picked;
-        if (!VersionManager.Validate(folder, out string error))
-        {
-            MessageBox.Show(error, "无法添加这个文件夹", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        var modes = new[]
-        {
-            new PickDialog.Item("move", "移动到游戏目录", "同盘时瞬间完成，原文件夹会消失"),
-            new PickDialog.Item("copy", "复制到游戏目录", "保留原文件夹，耗时取决于体积"),
-            new PickDialog.Item("link", "创建目录联接", "不占额外空间，仅在本机有效（需要管理员权限）")
-        };
-
-        string? mode = PickDialog.Show(Window.GetWindow(this), "添加方式",
-            $"即将把「{Path.GetFileName(folder)}」加入游戏目录：\n{GameLibrary.LibraryPath}", modes, "move");
-
-        if (mode is null) return;
-
-        try
-        {
-            AddVersionMode addMode = mode switch
-            {
-                "copy" => AddVersionMode.Copy,
-                "link" => AddVersionMode.Link,
-                _ => AddVersionMode.Move
-            };
-
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            GameVersion added = VersionManager.Add(folder, addMode);
-            GameLibrary.Refresh();
-            GameLibrary.Select(GameLibrary.Find(added.FolderPath));
-            Refresh();
-            MainWindow.Toast($"已添加版本「{added.DisplayName}」");
-        }
-        catch (Exception ex)
-        {
-            Log.Error("添加版本失败", ex);
-            MessageBox.Show($"添加失败：{ex.Message}", "PlainSpaceflightLauncher",
-                MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        finally
-        {
-            Mouse.OverrideCursor = null;
-        }
+        if (GameFolderAdder.Run(Window.GetWindow(this)) is null) return;
+        Refresh();
     }
 
     // ==================== 公告 / 自动检查更新 ====================

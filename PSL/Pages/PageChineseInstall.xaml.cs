@@ -61,10 +61,23 @@ public partial class PageChineseInstall : PclPage
         bool localOn = GameLibrary.Current is { } current &&
                        VersionSetup.ReadBool(current, "Localization", "Enabled");
         TxtHint.Text =
-            $"安装位置：{GameLibrary.SelectedFolder?.Path ?? GameLibrary.LibraryPath}\\" +
+            $"安装位置：{InstallRoot()}\\" +
             "<上面输入的名字>" + Environment.NewLine +
             "下载完成后会自动解压；安装包带密码时使用内置安装密码，无需手动输入。" +
             (localOn ? Environment.NewLine + "当前版本已开启汉化版功能，安装完成后可以在「版本设置」里继续管理字体与语言包。" : "");
+    }
+
+    /// <summary>
+    /// 汉化版的安装根目录：默认是版本选择页左栏选中的游戏文件夹；
+    /// 该文件夹本身就是版本时（<c>K:\SFS1.6</c> 这种布局）退到它的上一级，避免版本里套版本。
+    /// </summary>
+    private static string InstallRoot()
+    {
+        string? folder = GameLibrary.SelectedFolder?.Path;
+        if (string.IsNullOrWhiteSpace(folder)) return GameLibrary.LibraryPath;
+
+        if (!GameVersion.IsGameFolder(folder)) return folder;
+        return System.IO.Path.GetDirectoryName(GameFolder.Normalize(folder)) ?? folder;
     }
 
     private void BtnBack_Click(object sender, RoutedEventArgs e) => MainWindow.Instance?.PageBack();
@@ -93,7 +106,9 @@ public partial class PageChineseInstall : PclPage
             }
         }
 
-        string root = GameLibrary.SelectedFolder?.Path ?? GameLibrary.LibraryPath;
+        // 安装根目录：选中的游戏文件夹。若它本身就是个版本（如 K:\SFS1.6），
+        // 装到它下面会变成「版本里套版本」，所以改用它的上一级。
+        string root = InstallRoot();
         string targetDir = Path.Combine(root, name);
         if (Directory.Exists(targetDir) && Directory.EnumerateFileSystemEntries(targetDir).Any())
         {
